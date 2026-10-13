@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>公開状態の確認｜西条酒蔵めぐり</title>
+<style>body{font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif;max-width:760px;margin:0 auto;padding:24px;color:#10253e;background:#f8fafc;line-height:1.7}h1{font-size:1.65rem}p{margin:.4rem 0}.panel{background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:16px;margin:12px 0}.status{font-weight:700}.ok{color:#146c43}.bad{color:#b42318}.pending{color:#684b00}a{color:#064c8c}img{width:90px;height:90px;object-fit:contain;border:1px solid #ddd;background:white;border-radius:8px;padding:6px}button{font:inherit;min-height:44px;padding:8px 16px;background:#064c8c;color:white;border:0;border-radius:8px}</style>
+<link rel="stylesheet" href="./compact-ui.css?v=76">
+<link rel="stylesheet" href="./corporate-simple.css?v=76">
+</head><body>
+<h1>西条酒蔵めぐり｜公開状態の確認</h1>
+<p>このページは、GitHub Pagesで必要なファイルが正しく公開されているか確認します。</p>
+<div class="panel"><p><b>公開先：</b><span id="base"></span></p><p id="summary" class="status pending">確認中…</p></div>
+<div id="results"></div>
+<div class="panel"><p><b>ロゴ画像の表示確認</b></p><img id="logo" alt="西条酒蔵めぐりロゴの表示テスト"><p id="imageStatus" class="status pending">画像を確認中…</p></div>
+<p><a href="./index.html">トップページへ戻る</a></p>
+<script>
+const resources=[
+ ['トップページ','./index.html'],['CSSファイル','./compact-ui.css'],['追加CSS','./corporate-simple.css'],['地図CSS','./map.css'],['JavaScript','./compact-ui.js'],['地図JavaScript','./map.js'],['酒蔵写真フォルダ','./assets/images/breweries/sanyotsuru.webp'],['商品画像フォルダ','./assets/images/products/sanyotsuru.png'],['ロゴ画像','./assets/images/brand/saijo-breweries-emblem.jpg']
+];
+document.getElementById('base').textContent=location.origin+location.pathname.replace(/[^/]*$/,'');
+const results=document.getElementById('results');let done=0,failed=0;
+Promise.all(resources.map(async ([name,url])=>{const card=document.createElement('div');card.className='panel';card.innerHTML='<p><b>'+name+'</b></p><p class="status pending">確認中…</p>';results.appendChild(card);try{const r=await fetch(url+'?deploy_check='+Date.now(),{cache:'no-store'});const p=card.querySelector('.status');if(r.ok){p.className='status ok';p.textContent='OK — 読み込み可能';}else{failed++;p.className='status bad';p.textContent='NG — HTTP '+r.status+'（ファイルの配置先を確認）';}}catch(e){failed++;const p=card.querySelector('.status');p.className='status bad';p.textContent='NG — 読み込み失敗';}finally{done++;document.getElementById('summary').textContent=done+' / '+resources.length+' 件確認済み'+(done===resources.length?'。'+(failed?' 読み込み失敗があります。':' すべてのファイルを読み込めました。'):'');document.getElementById('summary').className='status '+(done===resources.length?(failed?'bad':'ok'):'pending');}}));
+const img=document.getElementById('logo');img.onload=()=>{document.getElementById('imageStatus').className='status ok';document.getElementById('imageStatus').textContent='OK — 画像が表示できています。'};img.onerror=()=>{document.getElementById('imageStatus').className='status bad';document.getElementById('imageStatus').textContent='NG — assets/images/brand の配置を確認してください。'};img.src='./assets/images/brand/saijo-breweries-emblem.jpg?deploy_check='+Date.now();
+</script></body></html>

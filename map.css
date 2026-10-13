@@ -1,0 +1,3312 @@
+:root {
+  --ink: #10222c;
+  --muted: #52636c;
+  --paper: rgba(255, 255, 255, 0.94);
+  --paper-solid: #ffffff;
+  --border: #10222c;
+  --accent: #8b2635;
+  --accent-dark: #54141d;
+  --accent-soft: #f7e4e8;
+  --gate: #087264;
+  --station: #155fa8;
+  --station-dark: #0a3d73;
+  --focus: #ffca28;
+  --road: #f4c85f;
+  --shadow: 0 12px 32px rgba(17, 42, 54, 0.22);
+  --safe-top: max(12px, env(safe-area-inset-top));
+  --safe-bottom: max(12px, env(safe-area-inset-bottom));
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", sans-serif;
+  color: var(--ink);
+}
+
+* { box-sizing: border-box; }
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #cfeee7;
+}
+button { font: inherit; }
+button, [role="button"] { touch-action: manipulation; }
+button:focus-visible, a:focus-visible { outline: 4px solid var(--focus); outline-offset: 3px; }
+[hidden] { display: none !important; }
+
+#map { position: fixed; inset: 0; }
+.maplibregl-map { background: linear-gradient(#92d9f3, #dff4ee 44%, #b7e3ad); }
+.maplibregl-canvas { outline: none; }
+.maplibregl-ctrl-attrib {
+  max-width: min(58vw, 440px);
+  font-size: 10px;
+  opacity: 0.78;
+}
+
+/* 境界線を描かず、遠景だけを霞ませる地平線表現。 */
+.horizon-haze {
+  position: fixed;
+  z-index: 5;
+  inset: 0 0 auto;
+  height: 43vh;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom,
+      rgba(124, 208, 244, 0.48) 0%,
+      rgba(209, 241, 249, 0.30) 32%,
+      rgba(240, 250, 248, 0.16) 63%,
+      rgba(255, 255, 255, 0) 100%);
+  mix-blend-mode: screen;
+}
+.soft-vignette {
+  position: fixed;
+  z-index: 6;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 62%, transparent 42%, rgba(193, 230, 215, 0.10) 66%, rgba(123, 190, 176, 0.22) 100%);
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 1000;
+  top: -90px;
+  left: 16px;
+  padding: 12px 16px;
+  color: #fff;
+  background: #000;
+  border-radius: 10px;
+}
+.skip-link:focus { top: 16px; }
+
+.app-header {
+  position: fixed;
+  z-index: 20;
+  top: var(--safe-top);
+  left: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(60vw, 430px);
+  min-height: 60px;
+  padding: 8px 15px 8px 9px;
+  border: 2px solid var(--border);
+  border-radius: 18px;
+  background: var(--paper);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+}
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 43px;
+  height: 43px;
+  flex: 0 0 43px;
+  color: #fff;
+  background: var(--accent);
+  border: 3px solid #fff;
+  outline: 2px solid var(--accent-dark);
+  border-radius: 50%;
+  font-size: 21px;
+  font-weight: 950;
+}
+.brand-copy h1 { margin: 0; font-size: clamp(16px, 2vw, 23px); line-height: 1.2; }
+.brand-copy p { margin: 2px 0 0; color: var(--muted); font-size: 12px; font-weight: 800; }
+
+.status-bar {
+  position: fixed;
+  z-index: 20;
+  top: calc(var(--safe-top) + 74px);
+  left: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(78vw, 470px);
+  min-height: 42px;
+  padding: 8px 13px;
+  color: #fff;
+  background: rgba(16, 34, 44, 0.90);
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.21);
+  font-size: 13px;
+  font-weight: 850;
+}
+.status-icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+}
+
+.map-controls {
+  position: fixed;
+  z-index: 30;
+  top: var(--safe-top);
+  right: 14px;
+  display: flex;
+  gap: 8px;
+}
+.control-button {
+  min-width: 66px;
+  min-height: 58px;
+  padding: 6px 10px;
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 2px solid var(--border);
+  border-radius: 17px;
+  box-shadow: var(--shadow);
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+  backdrop-filter: blur(14px);
+}
+.control-button:hover { transform: translateY(-1px); }
+.control-button.primary {
+  color: #fff;
+  background: var(--accent);
+  border-color: #fff;
+  outline: 2px solid var(--accent-dark);
+}
+.control-button.station-control {
+  color: #fff;
+  background: var(--station);
+  border-color: #fff;
+  outline: 2px solid var(--station-dark);
+}
+.control-icon { font-size: 21px; line-height: 1; }
+
+.area-chip {
+  position: fixed;
+  z-index: 14;
+  left: 14px;
+  bottom: calc(var(--safe-bottom) + 20px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 2px solid rgba(16, 34, 44, 0.72);
+  border-radius: 999px;
+  background: rgba(247, 254, 255, 0.92);
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.15);
+  font-size: 12px;
+  font-weight: 850;
+}
+.area-chip-dot {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  color: #fff;
+  background: var(--gate);
+  border: 2px solid #fff;
+  outline: 2px solid var(--gate);
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.places-panel {
+  position: fixed;
+  z-index: 45;
+  top: 14px;
+  right: 14px;
+  bottom: 14px;
+  width: min(400px, calc(100vw - 28px));
+  padding: 16px;
+  overflow: auto;
+  background: var(--paper-solid);
+  border: 2px solid var(--border);
+  border-radius: 24px;
+  box-shadow: 0 26px 75px rgba(15, 35, 45, 0.30);
+  transform: translateX(calc(100% + 32px));
+  transition: transform 0.25s ease;
+}
+.places-panel.open { transform: translateX(0); }
+.panel-grip { display: none; }
+.panel-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
+.panel-header p { margin: 0 0 3px; color: var(--accent); font-size: 12px; font-weight: 950; letter-spacing: 0.08em; }
+.panel-header h2 { margin: 0; font-size: 25px; }
+.panel-help { margin: 12px 0; color: var(--muted); font-size: 14px; }
+.close-button {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  color: var(--ink);
+  background: #fff;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+.places-list { display: grid; gap: 9px; }
+.place-list-button {
+  width: 100%;
+  min-height: 64px;
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  color: var(--ink);
+  background: #fff;
+  border: 2px solid #cbd4d8;
+  border-radius: 16px;
+  text-align: left;
+  cursor: pointer;
+}
+.place-list-button:hover { border-color: var(--accent); background: #fff8f9; }
+.list-number {
+  display: grid;
+  place-items: center;
+  width: 43px;
+  height: 43px;
+  color: #fff;
+  background: var(--accent);
+  border: 3px solid #fff;
+  outline: 2px solid var(--accent-dark);
+  border-radius: 13px;
+  font-weight: 950;
+}
+.list-number.gate { border-radius: 50%; background: var(--gate); outline-color: #064a40; }
+.list-number.station { border-radius: 9px; background: var(--station); outline-color: var(--station-dark); }
+.list-copy strong { display: block; font-size: 16px; }
+.list-copy small { display: block; margin-top: 3px; color: var(--muted); font-weight: 750; }
+.list-arrow { font-size: 24px; font-weight: 950; }
+
+.detail-card {
+  position: fixed;
+  z-index: 40;
+  left: 14px;
+  bottom: calc(var(--safe-bottom) + 18px);
+  width: min(450px, calc(100vw - 28px));
+  padding: 16px;
+  background: #fff;
+  border: 2px solid var(--border);
+  border-radius: 22px;
+  box-shadow: 0 22px 65px rgba(15, 35, 45, 0.30);
+}
+.detail-close { position: absolute; top: 12px; right: 12px; width: 42px; height: 42px; }
+.detail-heading { display: flex; align-items: center; gap: 12px; padding-right: 44px; }
+.detail-number {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  flex: 0 0 54px;
+  color: #fff;
+  background: var(--accent);
+  border: 3px solid #fff;
+  outline: 2px solid var(--accent-dark);
+  border-radius: 15px;
+  font-size: 23px;
+  font-weight: 950;
+}
+.detail-number.gate { border-radius: 50%; background: var(--gate); outline-color: #064a40; }
+.detail-number.station { border-radius: 10px; background: var(--station); outline-color: var(--station-dark); }
+.detail-type { margin: 0; color: var(--accent); font-size: 12px; font-weight: 950; }
+.detail-heading h2 { margin: 2px 0 0; font-size: clamp(21px, 5vw, 29px); line-height: 1.2; }
+.detail-description { margin: 14px 0 10px; color: #31444e; line-height: 1.75; }
+.distance-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 12px;
+  background: #edf5f4;
+  border-radius: 13px;
+}
+.distance-row strong { margin-left: auto; font-size: 19px; }
+.detail-actions { display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 8px; margin-top: 10px; }
+.detail-actions button,
+.permission-card button {
+  min-height: 50px;
+  padding: 8px;
+  color: var(--ink);
+  background: #fff;
+  border: 2px solid var(--border);
+  border-radius: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.detail-actions button:first-child { color: #fff; background: var(--accent); border-color: var(--accent-dark); }
+
+.permission-card {
+  position: fixed;
+  z-index: 60;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(400px, calc(100vw - 30px));
+  padding: 22px;
+  background: #fff;
+  border: 3px solid var(--border);
+  border-radius: 22px;
+  box-shadow: 0 26px 85px rgba(0, 0, 0, 0.34);
+  text-align: center;
+}
+.permission-card strong { display: block; font-size: 22px; }
+.permission-card p { color: var(--muted); line-height: 1.7; }
+.permission-card button { width: 100%; color: #fff; background: var(--accent); }
+
+/* 地図マーカー。色だけでなく番号・文字・形でも区別する。 */
+.place-marker {
+  appearance: none;
+  position: relative;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: visible;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.marker-pin {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  transform-origin: 50% 100%;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  color: #fff;
+  background: var(--accent);
+  border: 4px solid #fff;
+  outline: 3px solid var(--accent-dark);
+  border-radius: 15px 15px 15px 5px;
+  box-shadow: 0 9px 20px rgba(0, 0, 0, 0.30);
+  font-size: 20px;
+  font-weight: 950;
+}
+.place-marker.gate .marker-pin { border-radius: 50%; background: var(--gate); outline-color: #064a40; }
+.place-marker.station .marker-pin {
+  width: 58px;
+  height: 58px;
+  border-radius: 10px;
+  background: var(--station);
+  outline-color: var(--station-dark);
+  font-size: 21px;
+}
+.place-marker.station .marker-label {
+  bottom: 69px;
+  padding: 8px 12px;
+  color: #082d52;
+  border: 3px solid var(--station);
+  font-size: 15px;
+}
+.marker-label {
+  position: absolute;
+  left: 50%;
+  bottom: 58px;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 190px;
+  padding: 6px 9px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.96);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.18);
+  font-size: 13px;
+  font-weight: 950;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.place-marker:hover .marker-pin,
+.place-marker.selected .marker-pin { transform: translateX(-50%) scale(1.17); }
+.place-marker.selected .marker-label { background: #fff1b9; }
+.place-marker:focus-visible .marker-pin { outline: 5px solid var(--focus); }
+
+/*
+  現在地が地図画面に見えていないときの「頭だけ」表示。
+  GPS取得前や酒蔵エリア外でも、自キャラが画面下中央から自然にのぞきます。
+*/
+.user-peek {
+  position: fixed;
+  z-index: 14;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom) - 10px);
+  width: 174px;
+  height: 136px;
+  transform: translateX(-50%) translateY(34px) scale(0.98);
+  transform-origin: center bottom;
+  opacity: 0;
+  filter: drop-shadow(0 7px 9px rgba(0, 0, 0, 0.25));
+  pointer-events: none;
+  transition:
+    opacity 360ms ease,
+    transform 420ms cubic-bezier(.2,.8,.2,1),
+    filter 360ms ease;
+}
+.user-peek.visible {
+  opacity: 0.96;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+.user-peek.zooming {
+  opacity: 0;
+  transform: translateX(-50%) translateY(18px) scale(1.08);
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.08)) blur(0.7px);
+}
+.user-peek.waiting { animation: peekBreathe 2.5s ease-in-out infinite; }
+.user-peek svg { width: 100%; height: 100%; overflow: visible; }
+.user-peek .peek-shadow { fill: rgba(0, 0, 0, 0.20); }
+.user-peek .peek-shoulder { fill: #f1b62f; stroke: #fff; stroke-width: 3; }
+.user-peek .peek-backpack { fill: #28755f; stroke: #fff; stroke-width: 3; }
+.user-peek .peek-face { fill: #efbb95; stroke: #fff; stroke-width: 3; }
+.user-peek .peek-hair { fill: #1b252b; }
+.user-peek .peek-hair-band { fill: #243842; }
+.user-peek .peek-eye { fill: #172229; }
+.user-peek .peek-smile { fill: none; stroke: #754130; stroke-width: 2; stroke-linecap: round; }
+
+@keyframes peekBreathe {
+  0%, 100% { margin-bottom: 0; }
+  50% { margin-bottom: 3px; }
+}
+
+.user-marker {
+  position: relative;
+  width: 104px;
+  height: 150px;
+  pointer-events: none;
+  filter: drop-shadow(0 7px 7px rgba(0, 0, 0, 0.27));
+  opacity: 1;
+  transition: opacity 320ms ease, filter 320ms ease, transform 320ms ease;
+}
+.user-marker.map-zooming {
+  opacity: 0;
+  filter: none;
+  transform: translateY(5px) scale(1.04);
+}
+.user-marker::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 108px;
+  height: 42px;
+  transform: translateX(-50%);
+  border: 4px solid rgba(139, 38, 53, 0.72);
+  border-radius: 50%;
+  background: rgba(255, 202, 40, 0.27);
+  animation: gpsPulse 1.9s ease-out infinite;
+}
+.user-marker svg {
+  position: relative;
+  width: 104px;
+  height: 150px;
+  overflow: visible;
+  transition: transform 320ms cubic-bezier(.2,.8,.2,1);
+}
+.user-marker .avatar-normal-view,
+.user-marker .avatar-front-view {
+  transform-origin: center bottom;
+  transition: opacity 260ms ease, transform 320ms cubic-bezier(.2,.8,.2,1);
+}
+.user-marker .avatar-normal-view { opacity: 1; transform: scale(1); }
+.user-marker .avatar-front-view { opacity: 0; transform: translateY(7px) scale(0.90); }
+.user-marker.front-facing .avatar-normal-view { opacity: 0; transform: translateY(5px) scale(0.94); }
+.user-marker.front-facing .avatar-front-view { opacity: 1; transform: translateY(-4px) scale(1.16); }
+.user-marker.front-facing svg { transform: translateY(-5px) scale(1.10); }
+.user-marker.walking .left-arm,
+.user-marker.walking .right-leg { animation: limbForward 0.48s infinite alternate; transform-origin: center top; }
+.user-marker.walking .right-arm,
+.user-marker.walking .left-leg { animation: limbBack 0.48s infinite alternate; transform-origin: center top; }
+
+@keyframes gpsPulse {
+  from { transform: translateX(-50%) scale(0.55); opacity: 0.92; }
+  to { transform: translateX(-50%) scale(1.46); opacity: 0; }
+}
+@keyframes limbForward { to { transform: rotate(12deg); } }
+@keyframes limbBack { to { transform: rotate(-12deg); } }
+
+@media (max-width: 920px) {
+  .app-header { max-width: calc(100vw - 154px); }
+  .map-controls {
+    top: auto;
+    right: 10px;
+    bottom: calc(var(--safe-bottom) + 10px);
+    display: grid;
+    grid-template-columns: repeat(5, auto);
+  }
+  .control-button { min-width: 66px; min-height: 57px; }
+  .detail-card { bottom: calc(var(--safe-bottom) + 84px); }
+  .area-chip { bottom: calc(var(--safe-bottom) + 88px); }
+  .maplibregl-ctrl-bottom-right,
+  .maplibregl-ctrl-bottom-left { bottom: calc(var(--safe-bottom) + 72px); }
+}
+
+@media (max-width: 640px) {
+  .horizon-haze { height: 39vh; }
+  .app-header {
+    left: 9px;
+    max-width: calc(100vw - 110px);
+    min-height: 54px;
+    border-radius: 15px;
+  }
+  .brand-mark { width: 38px; height: 38px; flex-basis: 38px; font-size: 18px; }
+  .brand-copy h1 { font-size: 16px; }
+  .brand-copy p { font-size: 10px; }
+  .status-bar {
+    top: calc(var(--safe-top) + 66px);
+    left: 9px;
+    max-width: calc(100vw - 18px);
+  }
+  .map-controls {
+    left: 9px;
+    right: 9px;
+    grid-template-columns: repeat(5, 1fr);
+  }
+  .control-button { width: 100%; min-width: 0; }
+  .area-chip { left: 9px; max-width: calc(100vw - 18px); font-size: 11px; }
+  .places-panel {
+    top: auto;
+    right: 7px;
+    bottom: 7px;
+    left: 7px;
+    width: auto;
+    max-height: 76vh;
+    padding: 11px 13px calc(13px + env(safe-area-inset-bottom));
+    border-radius: 24px 24px 18px 18px;
+    transform: translateY(calc(100% + 20px));
+  }
+  .places-panel.open { transform: translateY(0); }
+  .panel-grip { display: block; width: 48px; height: 5px; margin: 0 auto 10px; border-radius: 99px; background: #adb5bd; }
+  .detail-card { left: 7px; width: calc(100vw - 14px); bottom: calc(var(--safe-bottom) + 80px); padding: 14px; }
+  .detail-actions { grid-template-columns: 1fr; }
+  .marker-label { max-width: 142px; font-size: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root { --paper: #fff; --border: #000; --ink: #000; }
+  .status-bar { background: #000; }
+  .horizon-haze, .soft-vignette { opacity: 0.45; }
+}
+
+/* 操作可能範囲を文字でも示すUD表示 */
+.area-chip {
+  border-color: rgba(34, 113, 128, .72);
+}
+@media (max-width: 520px) {
+  .area-chip {
+    max-width: calc(100vw - 28px);
+    font-size: 11px;
+  }
+}
+
+/* 提供画像を、西条駅と白牡丹酒造の大きな目印として表示する。 */
+.place-marker.has-picture {
+  z-index: 5;
+}
+.station-picture {
+  position: absolute;
+  left: 50%;
+  bottom: 38px;
+  width: 158px;
+  aspect-ratio: 3 / 2;
+  transform: translateX(-50%);
+  overflow: hidden;
+  border: 4px solid #fff;
+  outline: 3px solid var(--station-dark);
+  border-radius: 15px;
+  background: #dcecff;
+  box-shadow: 0 13px 28px rgba(0, 0, 0, 0.32);
+  transition: transform .2s ease;
+}
+.station-picture img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.station-picture-label {
+  position: absolute;
+  left: 50%;
+  bottom: 143px;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 190px;
+  padding: 7px 12px;
+  color: #082d52;
+  background: rgba(255, 255, 255, .97);
+  border: 3px solid var(--station);
+  border-radius: 999px;
+  box-shadow: 0 7px 17px rgba(0, 0, 0, .20);
+  font-size: 15px;
+  font-weight: 950;
+  white-space: nowrap;
+}
+.station-picture-pin {
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
+  transform: translateX(-50%);
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  color: #fff;
+  background: var(--station);
+  border: 4px solid #fff;
+  outline: 3px solid var(--station-dark);
+  border-radius: 50% 50% 50% 8px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .28);
+  font-size: 18px;
+  font-weight: 950;
+}
+
+/* 白牡丹酒造の写真マーカーは、酒蔵の赤色と番号2で区別する。 */
+.place-marker.brewery.has-picture .station-picture {
+  outline-color: var(--accent-dark);
+  background: var(--accent-soft);
+}
+.place-marker.brewery.has-picture .station-picture-label {
+  color: var(--accent-dark);
+  border-color: var(--accent);
+}
+.place-marker.brewery.has-picture .station-picture-pin {
+  background: var(--accent);
+  outline-color: var(--accent-dark);
+}
+.place-marker.has-picture:hover .station-picture,
+.place-marker.has-picture.selected .station-picture {
+  transform: translateX(-50%) scale(1.06);
+}
+.place-marker.has-picture.selected .station-picture-label {
+  background: #fff1b9;
+}
+.place-marker.has-picture:focus-visible .station-picture {
+  outline: 5px solid var(--focus);
+}
+
+.detail-image {
+  display: block;
+  width: 100%;
+  max-height: 190px;
+  margin: 13px 0 4px;
+  object-fit: cover;
+  border: 2px solid var(--station-dark);
+  border-radius: 15px;
+  box-shadow: 0 8px 22px rgba(16, 52, 82, .18);
+}
+
+@media (max-width: 640px) {
+  .station-picture {
+    width: 124px;
+    bottom: 34px;
+    border-width: 3px;
+  }
+  .station-picture-label {
+    bottom: 118px;
+    max-width: 150px;
+    padding: 6px 9px;
+    font-size: 12px;
+  }
+  .station-picture-pin {
+    width: 42px;
+    height: 42px;
+    font-size: 16px;
+  }
+  .detail-image { max-height: 145px; }
+}
+
+
+/* 方角を色だけでなく、矢印・文字・施設名で示すUDガイド。 */
+.direction-guide {
+  position: fixed;
+  z-index: 24;
+  top: calc(var(--safe-top) + 72px);
+  right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 210px;
+  padding: 9px 12px 9px 9px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+  pointer-events: none;
+}
+.compass-face {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+  color: #fff;
+  background: #123d58;
+  border: 4px solid #fff;
+  outline: 2px solid #10222c;
+  border-radius: 50%;
+}
+.compass-n {
+  position: absolute;
+  top: 3px;
+  font-size: 12px;
+  font-weight: 950;
+}
+.compass-arrow {
+  margin-top: 9px;
+  color: #ffca28;
+  font-size: 35px;
+  font-weight: 950;
+  line-height: 1;
+}
+.direction-copy {
+  display: grid;
+  gap: 1px;
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.35;
+}
+.direction-copy strong { font-size: 14px; }
+.direction-copy small { color: var(--muted); font-size: 10px; }
+
+.user-heading-arrow {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: -31px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  transform: translateX(-50%);
+  transform-origin: 50% 50%;
+  color: #fff;
+  background: #087264;
+  border: 3px solid #fff;
+  outline: 2px solid #064a40;
+  border-radius: 50%;
+  box-shadow: 0 5px 13px rgba(0,0,0,.27);
+  font-size: 22px;
+  line-height: 1;
+}
+.user-heading-arrow[hidden] { display: none; }
+
+@media (max-width: 920px) {
+  .direction-guide {
+    top: calc(var(--safe-top) + 66px);
+    right: 9px;
+    min-width: 184px;
+    padding: 7px 9px 7px 7px;
+  }
+  .compass-face { width: 50px; height: 50px; flex-basis: 50px; }
+  .compass-arrow { font-size: 30px; }
+  .direction-copy { font-size: 11px; }
+  .direction-copy strong { font-size: 12px; }
+}
+
+@media (max-width: 520px) {
+  .direction-guide {
+    top: calc(var(--safe-top) + 62px);
+    right: 7px;
+    min-width: 0;
+    width: 146px;
+    gap: 7px;
+  }
+  .compass-face { width: 44px; height: 44px; flex-basis: 44px; }
+  .compass-n { font-size: 10px; }
+  .compass-arrow { margin-top: 7px; font-size: 27px; }
+  .direction-copy { font-size: 10px; }
+  .direction-copy strong { font-size: 11px; }
+  .direction-copy small { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .user-peek,
+  .user-marker { transition-duration: 0.01ms !important; }
+  .user-peek.waiting { animation: none; }
+}
+
+
+/* =========================================================
+   探索開始アニメーション
+   ========================================================= */
+.explore-intro {
+  position: fixed;
+  z-index: 60;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle at 50% 58%, rgba(255,255,255,.08), rgba(13,74,65,.18));
+  transition: opacity 420ms ease;
+}
+.explore-intro.active { opacity: 1; }
+.explore-intro.leaving { opacity: 0; }
+.explore-intro-glow {
+  position: absolute;
+  left: 50%;
+  top: 55%;
+  width: min(78vw, 650px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(.65);
+  background: repeating-conic-gradient(from 0deg, rgba(255,213,90,.27) 0 7deg, transparent 7deg 18deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 34%, #000 35% 66%, transparent 67%);
+  mask: radial-gradient(circle, transparent 0 34%, #000 35% 66%, transparent 67%);
+  animation: exploreGlow 2.4s cubic-bezier(.2,.8,.2,1) both;
+}
+.explore-intro-card {
+  position: relative;
+  width: min(88vw, 440px);
+  padding: 25px 26px 23px;
+  border: 3px solid rgba(255,255,255,.94);
+  border-radius: 30px;
+  text-align: center;
+  color: #163934;
+  background: rgba(255,251,230,.94);
+  box-shadow: 0 20px 55px rgba(20,62,55,.28), inset 0 0 0 2px rgba(225,173,39,.28);
+  backdrop-filter: blur(10px);
+  transform: translateY(38px) scale(.78);
+  opacity: 0;
+  animation: exploreCardIn 700ms 180ms cubic-bezier(.16,1,.3,1) forwards;
+}
+.explore-intro-compass {
+  position: absolute;
+  left: 50%;
+  top: -38px;
+  width: 76px;
+  height: 76px;
+  transform: translateX(-50%) rotate(-9deg);
+  display: grid;
+  place-items: center;
+  border: 5px solid #fff;
+  border-radius: 50%;
+  color: #fff;
+  background: #8b2635;
+  box-shadow: 0 8px 18px rgba(73,23,32,.3);
+  animation: compassReady 900ms 500ms cubic-bezier(.2,.9,.2,1) both;
+}
+.explore-intro-compass span {
+  position: absolute;
+  top: 8px;
+  font-size: 13px;
+  font-weight: 900;
+}
+.explore-intro-compass strong {
+  margin-top: 12px;
+  font-size: 38px;
+  line-height: 1;
+}
+.explore-intro-kicker {
+  margin: 19px 0 4px;
+  color: #8b2635;
+  font-weight: 900;
+  letter-spacing: .16em;
+}
+.explore-intro h2 {
+  margin: 0;
+  font-size: clamp(30px, 7vw, 46px);
+  line-height: 1.08;
+  letter-spacing: .02em;
+}
+.explore-intro-copy {
+  margin: 12px 0 17px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #43635e;
+}
+.explore-intro-route {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 31px;
+}
+.explore-intro-route i,
+.explore-intro-route span {
+  width: 13px;
+  height: 13px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: #d59d20;
+  box-shadow: 0 0 0 2px #d59d20;
+  opacity: .2;
+  animation: routeDot 1.25s ease-in-out infinite;
+}
+.explore-intro-route span:nth-of-type(1) { animation-delay: .14s; }
+.explore-intro-route span:nth-of-type(2) { animation-delay: .28s; }
+.explore-intro-route span:nth-of-type(3) { animation-delay: .42s; }
+.explore-intro-route b {
+  margin-left: 5px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  color: #fff;
+  background: #177663;
+  font-size: 15px;
+  letter-spacing: .08em;
+  box-shadow: 0 4px 0 #0c5445;
+  animation: goPop 760ms 1s cubic-bezier(.16,1.5,.3,1) both;
+}
+
+body.explore-starting .user-peek.visible svg,
+body.explore-starting .user-marker:not(.map-zooming) svg {
+  animation: explorerReady 1.15s 2 cubic-bezier(.2,.8,.2,1);
+}
+body.explore-starting .user-heading-arrow {
+  animation: headingReady 700ms ease-in-out infinite alternate;
+}
+
+@keyframes exploreGlow {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.45) rotate(-12deg); }
+  55% { opacity: 1; }
+  100% { opacity: .55; transform: translate(-50%, -50%) scale(1.08) rotate(16deg); }
+}
+@keyframes exploreCardIn {
+  0% { opacity: 0; transform: translateY(38px) scale(.78); }
+  65% { opacity: 1; transform: translateY(-5px) scale(1.03); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes compassReady {
+  0% { opacity: 0; transform: translateX(-50%) translateY(20px) rotate(-70deg) scale(.45); }
+  70% { opacity: 1; transform: translateX(-50%) translateY(-4px) rotate(8deg) scale(1.08); }
+  100% { opacity: 1; transform: translateX(-50%) rotate(0) scale(1); }
+}
+@keyframes routeDot {
+  0%, 100% { opacity: .25; transform: scale(.72); }
+  45% { opacity: 1; transform: scale(1.18); }
+}
+@keyframes goPop {
+  0% { opacity: 0; transform: translateX(-12px) scale(.45) rotate(-8deg); }
+  100% { opacity: 1; transform: translateX(0) scale(1) rotate(0); }
+}
+@keyframes explorerReady {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  28% { transform: translateY(-12px) rotate(-3deg); }
+  55% { transform: translateY(0) rotate(3deg); }
+  74% { transform: translateY(-6px) rotate(-2deg); }
+}
+@keyframes headingReady {
+  from { transform: translateX(-50%) translateY(0) scale(1); }
+  to { transform: translateX(-50%) translateY(-7px) scale(1.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .explore-intro-glow,
+  .explore-intro-card,
+  .explore-intro-compass,
+  .explore-intro-route i,
+  .explore-intro-route span,
+  .explore-intro-route b,
+  body.explore-starting .user-peek.visible svg,
+  body.explore-starting .user-marker:not(.map-zooming) svg,
+  body.explore-starting .user-heading-arrow {
+    animation: none !important;
+  }
+  .explore-intro-card { opacity: 1; transform: none; }
+  .explore-intro-compass { opacity: 1; transform: translateX(-50%); }
+}
+
+
+.voice-credit {
+  width: 100%;
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  color: #52606b;
+  text-align: right;
+}
+
+.voice-credit a {
+  color: #145f74;
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+
+#speakButton:disabled {
+  opacity: 0.58;
+  cursor: wait;
+}
+
+/* =========================================================
+   遠目＝建物型の名前表示／拡大時＝写真表示
+   写真が密集して重ならないよう、ズーム段階で表示を切り替える。
+   ========================================================= */
+.photo-marker-part,
+.overview-building-marker {
+  transition:
+    opacity 220ms ease,
+    visibility 220ms ease,
+    transform 220ms ease;
+}
+
+/* 遠くから見たときの小さな酒蔵建物型マーカー */
+.overview-building-marker {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  z-index: 3;
+  width: 82px;
+  min-height: 74px;
+  padding: 20px 7px 8px;
+  transform: translateX(-50%) scale(var(--overview-marker-scale, .82));
+  transform-origin: center bottom;
+  color: #19313c;
+  background:
+    linear-gradient(90deg, transparent 0 14%, rgba(37, 61, 69, .13) 14% 19%, transparent 19% 81%, rgba(37, 61, 69, .13) 81% 86%, transparent 86%),
+    linear-gradient(#fffdf6, #f1eadb);
+  border: 3px solid #31464e;
+  border-bottom-width: 6px;
+  border-radius: 5px 5px 8px 8px;
+  box-shadow: 0 9px 18px rgba(0, 0, 0, .24);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: none;
+}
+
+.overview-building-roof {
+  position: absolute;
+  left: -7px;
+  right: -7px;
+  top: -10px;
+  height: 18px;
+  background: #263940;
+  border: 3px solid #fff;
+  border-bottom: 0;
+  clip-path: polygon(8% 100%, 18% 22%, 50% 0, 82% 22%, 92% 100%);
+  filter: drop-shadow(0 4px 2px rgba(0, 0, 0, .22));
+}
+
+.overview-building-number {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  transform: translateX(-50%);
+  color: #fff;
+  background: var(--accent);
+  border: 3px solid #fff;
+  outline: 2px solid var(--accent-dark);
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.overview-building-name {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  z-index: 12;
+  display: block;
+  width: max-content;
+  max-width: 158px;
+  padding: 6px 9px;
+  transform: translateX(-50%);
+  color: #183247;
+  background: rgba(255, 255, 255, .96);
+  border: 2px solid rgba(31, 57, 70, .82);
+  border-radius: 10px;
+  box-shadow: 0 5px 14px rgba(17, 36, 45, .18);
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1.18;
+  letter-spacing: -.01em;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.place-marker.station .overview-building-marker {
+  color: #092f55;
+  background: linear-gradient(#f4fbff, #dcecff);
+  border-color: var(--station-dark);
+}
+.place-marker.station .overview-building-roof { background: var(--station-dark); }
+.place-marker.station .overview-building-number {
+  background: var(--station);
+  outline-color: var(--station-dark);
+}
+.place-marker.gate .overview-building-marker {
+  color: #064a40;
+  background: linear-gradient(#fffdf3, #e9efe7);
+  border-color: #064a40;
+}
+.place-marker.gate .overview-building-roof { background: #2d2923; }
+.place-marker.gate .overview-building-number {
+  background: var(--gate);
+  outline-color: #064a40;
+}
+
+/* 初期表示・遠景では写真を完全に隠す。 */
+#map.overview-marker-mode .photo-marker-part {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* 十分に拡大したら、建物型の名前を隠して写真へ切り替える。 */
+#map.photo-marker-mode .overview-building-marker {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-50%) scale(.72) translateY(10px);
+}
+#map.photo-marker-mode .photo-marker-part {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* 写真モードでも少し小さくし、近接する酒蔵写真の重なりを軽減する。 */
+#map.photo-marker-mode .station-picture {
+  width: 138px;
+}
+#map.photo-marker-mode .station-picture-label {
+  bottom: 130px;
+  max-width: 170px;
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .overview-building-marker {
+    width: 70px;
+    min-height: 66px;
+    padding: 18px 5px 7px;
+  }
+  .overview-building-number {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+  .overview-building-name {
+    bottom: calc(100% + 8px);
+    max-width: 136px;
+    padding: 5px 7px;
+    font-size: 10.5px;
+  }
+  #map.photo-marker-mode .station-picture {
+    width: 106px;
+  }
+  #map.photo-marker-mode .station-picture-label {
+    bottom: 104px;
+    max-width: 128px;
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+}
+
+
+/* 選択した目的地への青い徒歩ルート */
+.route-guide {
+  margin-top: 12px;
+  padding: 11px;
+  border: 2px solid #8cc9ff;
+  border-radius: 16px;
+  background: rgba(7, 89, 184, 0.96);
+  color: #ffffff;
+}
+.route-guide p {
+  margin: 0 0 9px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.55;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+.route-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 7px;
+}
+.route-actions button {
+  min-height: 43px;
+  border: 2px solid #087cff;
+  border-radius: 12px;
+  padding: 8px 10px;
+  background: #0a6fd6;
+  color: #ffffff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 950;
+  cursor: pointer;
+}
+.route-actions button:nth-child(2) {
+  background: #0059b8;
+  color: #ffffff;
+}
+.route-actions button:disabled {
+  border-color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.68);
+  cursor: default;
+}
+.place-marker.route-start .overview-building-marker,
+.place-marker.route-start .station-picture,
+.place-marker.route-start .marker-pin {
+  outline: 4px solid #18a558;
+  outline-offset: 3px;
+}
+.place-marker.route-destination .overview-building-marker,
+.place-marker.route-destination .station-picture,
+.place-marker.route-destination .marker-pin {
+  outline: 4px solid #087cff;
+  outline-offset: 3px;
+}
+@media (max-width: 720px) {
+  .route-actions { grid-template-columns: 1fr 1fr; }
+  .route-actions button:last-child { grid-column: 1 / -1; }
+}
+
+
+/* =========================================================
+   現在地から西条へ向かう移動アニメーション
+   ========================================================= */
+.travel-intro {
+  position: fixed;
+  z-index: 70;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  color: #fff;
+  background: linear-gradient(#63bff2 0 58%, #b8e3a1 58% 100%);
+  transition: opacity 380ms ease;
+}
+.travel-intro.active { opacity: 1; }
+.travel-intro.leaving { opacity: 0; }
+.travel-sky,
+.travel-ground,
+.travel-distant-town,
+.travel-path {
+  position: absolute;
+  inset: 0;
+}
+.travel-sky {
+  background: linear-gradient(180deg, #4eb4ee 0%, #9bdcf7 72%, rgba(255,255,255,.4) 100%);
+}
+.travel-ground {
+  top: 58%;
+  background:
+    linear-gradient(135deg, transparent 0 48%, rgba(255,255,255,.15) 49% 51%, transparent 52%) 0 0 / 120px 120px,
+    linear-gradient(#9dd487, #6eb36d);
+  transform: perspective(440px) rotateX(48deg) scale(1.35);
+  transform-origin: 50% 0;
+}
+.travel-distant-town {
+  top: 43%;
+  height: 22%;
+  opacity: .78;
+  background:
+    linear-gradient(135deg, transparent 47%, #587e6d 48% 54%, transparent 55%) 0 100% / 150px 90px repeat-x,
+    linear-gradient(45deg, transparent 44%, #6d9580 45% 55%, transparent 56%) 70px 100% / 180px 110px repeat-x;
+  filter: blur(.3px);
+}
+.travel-cloud {
+  position: absolute;
+  width: 130px;
+  height: 42px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.87);
+  box-shadow: 38px -18px 0 3px rgba(255,255,255,.87), 77px 2px 0 -5px rgba(255,255,255,.87);
+  animation: travelCloud 8s linear infinite;
+}
+.cloud-one { top: 15%; left: -180px; animation-duration: 8s; }
+.cloud-two { top: 31%; left: -260px; transform: scale(.68); opacity: .75; animation-duration: 11s; animation-delay: -5s; }
+.cloud-three { top: 8%; left: -340px; transform: scale(.48); opacity: .65; animation-duration: 14s; animation-delay: -9s; }
+.travel-path {
+  top: 67%;
+  height: 20%;
+}
+.travel-path::before {
+  content: "";
+  position: absolute;
+  left: -12%;
+  right: -12%;
+  top: 23%;
+  height: 76px;
+  transform: skewY(-2deg);
+  background: #58636a;
+  border-top: 9px solid rgba(255,255,255,.82);
+  border-bottom: 9px solid rgba(49,70,68,.35);
+  box-shadow: 0 16px 25px rgba(35,69,58,.2);
+}
+.travel-path-line {
+  position: absolute;
+  z-index: 2;
+  top: calc(23% + 33px);
+  width: 70px;
+  height: 7px;
+  border-radius: 99px;
+  background: #fff7c7;
+  animation: roadLine 900ms linear infinite;
+}
+.line-one { left: 8%; }
+.line-two { left: 56%; animation-delay: -450ms; }
+.mode-train .travel-path::before {
+  top: 20%;
+  height: 84px;
+  border: 0;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 36px, #503d2f 36px 48px, transparent 48px 82px),
+    linear-gradient(transparent 18px, #4f5356 19px 28px, transparent 29px 55px, #4f5356 56px 65px, transparent 66px),
+    #b39a75;
+  box-shadow: inset 0 0 0 5px rgba(94,73,48,.25), 0 16px 25px rgba(35,69,58,.2);
+}
+.mode-train .travel-path-line { display: none; }
+.mode-plane .travel-ground,
+.mode-plane .travel-distant-town,
+.mode-plane .travel-path { opacity: .42; }
+.mode-plane .travel-path { transform: translateY(90px); }
+.travel-vehicle {
+  position: absolute;
+  z-index: 4;
+  left: -180px;
+  top: calc(67% + 4px);
+  width: 150px;
+  text-align: center;
+  font-size: 82px;
+  line-height: 1;
+  filter: drop-shadow(0 13px 8px rgba(23,54,46,.26));
+}
+.travel-vehicle > span { display: none; }
+.mode-car .vehicle-car,
+.mode-train .vehicle-train,
+.mode-plane .vehicle-plane { display: inline-block; }
+.mode-car.active .travel-vehicle { animation: vehicleDrive 2.55s cubic-bezier(.16,.72,.27,1) both; }
+.mode-train.active .travel-vehicle {
+  top: calc(67% - 6px);
+  font-size: 92px;
+  animation: trainRide 2.85s cubic-bezier(.12,.68,.25,1) both;
+}
+.mode-plane.active .travel-vehicle {
+  top: 30%;
+  font-size: 98px;
+  animation: planeFly 3.15s cubic-bezier(.18,.72,.27,1) both;
+}
+.travel-destination {
+  position: absolute;
+  z-index: 3;
+  right: 6%;
+  top: 54%;
+  width: 104px;
+  height: 96px;
+  display: grid;
+  place-items: center;
+  border: 5px solid rgba(255,255,255,.95);
+  border-radius: 12px 12px 7px 7px;
+  color: #7b2132;
+  background: #fff9e8;
+  box-shadow: 0 14px 24px rgba(34,70,60,.24);
+}
+.destination-roof {
+  position: absolute;
+  left: -15px;
+  right: -15px;
+  top: -28px;
+  height: 34px;
+  border-radius: 8px 8px 3px 3px;
+  background: #273b42;
+  transform: perspective(80px) rotateX(25deg);
+}
+.travel-destination strong { font-size: 47px; font-family: serif; }
+.travel-message {
+  position: absolute;
+  z-index: 8;
+  left: 50%;
+  top: max(88px, calc(env(safe-area-inset-top) + 55px));
+  width: min(90vw, 570px);
+  transform: translateX(-50%);
+  padding: 19px 22px 20px;
+  border: 3px solid rgba(255,255,255,.88);
+  border-radius: 24px;
+  text-align: center;
+  color: #fff;
+  background: rgba(7,48,75,.82);
+  box-shadow: 0 15px 38px rgba(5,36,58,.32);
+  backdrop-filter: blur(8px);
+}
+.travel-kicker {
+  margin: 0 0 5px;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  color: #ffef9f;
+}
+.travel-message h2 {
+  margin: 0;
+  font-size: clamp(25px, 6vw, 40px);
+  line-height: 1.18;
+  color: #fff;
+}
+.travel-message p:last-child {
+  margin: 9px 0 0;
+  font-size: clamp(13px, 3.5vw, 17px);
+  font-weight: 800;
+  color: #fff;
+}
+@keyframes vehicleDrive {
+  0% { left: -180px; transform: translateY(5px) rotate(-2deg); }
+  55% { transform: translateY(-5px) rotate(2deg); }
+  100% { left: calc(100% - 185px); transform: translateY(3px) rotate(0); }
+}
+@keyframes trainRide {
+  0% { left: -190px; transform: translateY(1px); }
+  100% { left: calc(100% - 190px); transform: translateY(1px); }
+}
+@keyframes planeFly {
+  0% { left: -190px; transform: translateY(90px) rotate(-8deg) scale(.72); }
+  45% { transform: translateY(-30px) rotate(-2deg) scale(1); }
+  100% { left: calc(100% - 185px); transform: translateY(-100px) rotate(5deg) scale(.82); }
+}
+@keyframes travelCloud { to { left: calc(100% + 180px); } }
+@keyframes roadLine { from { transform: translateX(150px); } to { transform: translateX(-170px); } }
+
+@media (max-width: 560px) {
+  .travel-message { top: max(70px, calc(env(safe-area-inset-top) + 36px)); padding: 16px 14px; }
+  .travel-vehicle { font-size: 70px; }
+  .mode-train.active .travel-vehicle { font-size: 78px; }
+  .mode-plane.active .travel-vehicle { font-size: 84px; }
+  .travel-destination { right: 3%; top: 57%; width: 82px; height: 78px; }
+  .travel-destination strong { font-size: 38px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .travel-cloud,
+  .travel-path-line,
+  .travel-vehicle { animation: none !important; }
+  .travel-vehicle { left: 38%; }
+  .mode-plane .travel-vehicle { top: 34%; }
+}
+
+/* =========================================================
+   実際の地図を使う到着アニメーション
+   ========================================================= */
+.travel-intro {
+  background: transparent !important;
+  pointer-events: none;
+}
+.travel-intro .travel-sky,
+.travel-intro .travel-ground,
+.travel-intro .travel-distant-town,
+.travel-intro .travel-path,
+.travel-intro .travel-vehicle,
+.travel-intro .travel-destination {
+  display: none !important;
+}
+.travel-intro::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(5, 37, 59, .10), transparent 28%, transparent 72%, rgba(5, 37, 59, .12));
+}
+.travel-intro .travel-message {
+  z-index: 76;
+  border-color: rgba(255,255,255,.96);
+  background: rgba(4, 42, 70, .90);
+}
+
+.map-travel-vehicle {
+  width: 64px;
+  height: 100px;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 7px rgba(0, 0, 0, .35));
+}
+.map-travel-train {
+  width: 66px;
+  height: 118px;
+}
+.map-travel-icon {
+  width: 100%;
+  height: 100%;
+  transform: rotate(var(--travel-bearing, 0deg));
+  transform-origin: 50% 50%;
+  transition: transform 90ms linear;
+}
+.map-travel-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.vehicle-shadow { fill: rgba(14, 30, 36, .32); transform: translate(2px, 4px); }
+.vehicle-car-body { fill: #1478d4; stroke: #fff; stroke-width: 2.2; }
+.vehicle-car-glass { fill: #d9f4ff; stroke: #0c416b; stroke-width: 1.4; }
+.vehicle-car-rear { fill: #0c5ca8; }
+.vehicle-train-body { fill: #f8fbff; stroke: #164b72; stroke-width: 2.5; }
+.vehicle-train-window { fill: #5eb3dc; stroke: #143b58; stroke-width: 1.5; }
+.vehicle-train-door { fill: #dce8ef; stroke: #496474; stroke-width: 1.5; }
+.vehicle-light { fill: #fff2a6; stroke: #6b5000; stroke-width: 1; }
+.vehicle-wheel { fill: #27343b; }
+.vehicle-front-arrow { fill: #ffcc38; stroke: #633f00; stroke-width: 1.3; }
+
+.map-flight-overlay {
+  position: fixed;
+  z-index: 65;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.map-flight-arc {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.map-flight-arc path {
+  fill: none;
+  stroke: rgba(255, 255, 255, .92);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: 13 15;
+  filter: drop-shadow(0 2px 3px rgba(0, 81, 139, .46));
+}
+.map-flight-plane {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 112px;
+  height: 84px;
+  transform-origin: 50% 50%;
+  filter: drop-shadow(0 12px 7px rgba(2, 45, 79, .34));
+}
+.map-flight-plane svg { width: 100%; height: 100%; overflow: visible; }
+.plane-shadow { fill: rgba(0, 38, 68, .28); transform: translate(2px, 5px); }
+.plane-body { fill: #f8fbff; stroke: #17679b; stroke-width: 2.5; }
+.plane-window { fill: #5cc6ee; stroke: #174d70; stroke-width: 1.2; }
+
+@media (max-width: 560px) {
+  .map-travel-vehicle { width: 54px; height: 86px; }
+  .map-travel-train { width: 58px; height: 103px; }
+  .map-flight-plane { width: 92px; height: 69px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-travel-icon { transition: none; }
+  .map-flight-arc path { stroke-dasharray: none; }
+}
+
+
+/* =========================================================
+   移動演出の画面安定化
+   ========================================================= */
+.travel-intro {
+  background: transparent !important;
+  contain: layout paint;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+.travel-intro::before {
+  background: linear-gradient(180deg, rgba(5, 37, 59, .06), transparent 30%, transparent 74%, rgba(5, 37, 59, .08)) !important;
+}
+.map-travel-vehicle,
+.map-flight-plane {
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+.map-travel-icon {
+  transform: translateZ(0) rotate(var(--travel-bearing, 0deg));
+  transition: none !important;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+.map-travel-vehicle {
+  filter: drop-shadow(0 5px 3px rgba(0, 0, 0, .24));
+}
+.map-flight-plane {
+  filter: drop-shadow(0 6px 4px rgba(2, 45, 79, .24));
+}
+.map-flight-arc path {
+  filter: none;
+}
+
+/* =========================================================
+   乗り物アニメーション v2
+   車は画面上の道路方向、電車は線路方向へ前向きに進む。
+   ========================================================= */
+.map-travel-vehicle {
+  z-index: 70;
+  width: 70px;
+  height: 112px;
+  filter: drop-shadow(0 8px 5px rgba(0, 0, 0, .32));
+}
+.map-travel-train {
+  width: 76px;
+  height: 138px;
+}
+.map-travel-icon {
+  transform: translateZ(0) rotate(var(--travel-bearing, 0deg));
+  transform-origin: 50% 50%;
+  transition: none !important;
+}
+.vehicle-car-body { fill: #1478d4; stroke: #fff; stroke-width: 2.6; }
+.vehicle-car-hood { fill: #1d8be7; stroke: #0b4f86; stroke-width: 1.4; }
+.vehicle-car-glass { fill: #dff6ff; stroke: #083f68; stroke-width: 1.5; }
+.vehicle-car-roof { fill: #0c5ca8; stroke: #083f68; stroke-width: 1.2; }
+.vehicle-headlight { fill: #fff4a8; stroke: #5b4500; stroke-width: 1.1; }
+.vehicle-tail-light { fill: #ff3c45; stroke: #7c0910; stroke-width: 1.1; }
+.vehicle-front-chevron { fill: #ffcf35; stroke: #5a3a00; stroke-width: 1.4; }
+.vehicle-train-body { fill: #f8fbff; stroke: #203c4d; stroke-width: 2.8; }
+.vehicle-train-front { fill: #edf4f7; stroke: #294956; stroke-width: 1.5; }
+.vehicle-train-window { fill: #2e6177; stroke: #102d3c; stroke-width: 1.5; }
+.vehicle-train-band { fill: #c82333; stroke: #7d0d18; stroke-width: 1.2; }
+.vehicle-train-door { fill: #d9e5ea; stroke: #526b76; stroke-width: 1.5; }
+.vehicle-train-roof { fill: #8b9ba3; }
+.vehicle-pantograph { fill: none; stroke: #313c42; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+.map-flight-arc .flight-arc-shadow {
+  fill: none;
+  stroke: rgba(2, 46, 79, .30);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 20 18;
+  transform: translateY(3px);
+}
+.map-flight-arc .flight-arc-main {
+  fill: none;
+  stroke: rgba(255, 255, 255, .96);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: 18 16;
+}
+.map-flight-plane {
+  width: 136px;
+  height: 96px;
+  filter: drop-shadow(0 8px 5px rgba(2, 45, 79, .28));
+}
+.plane-body { fill: #fbfdff; stroke: #17679b; stroke-width: 2.8; }
+.plane-shadow { fill: rgba(0, 38, 68, .24); transform: translate(3px, 6px); }
+.plane-wing-detail, .plane-tail-detail { fill: none; stroke: #8cb7d0; stroke-width: 2; }
+.plane-cockpit { fill: #2a7da8; stroke: #174d70; stroke-width: 1.4; }
+.plane-window { fill: #60c8ee; stroke: #174d70; stroke-width: 1; }
+.plane-engine { fill: #dbe8ef; stroke: #52788f; stroke-width: 1.3; }
+.plane-contrail {
+  position: absolute;
+  right: calc(100% - 16px);
+  width: 74px;
+  height: 5px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.82));
+  filter: blur(.4px);
+}
+.contrail-one { top: 41%; transform: rotate(-2deg); }
+.contrail-two { top: 58%; transform: rotate(2deg); opacity: .82; }
+
+@media (max-width: 560px) {
+  .map-travel-vehicle { width: 58px; height: 94px; }
+  .map-travel-train { width: 64px; height: 116px; }
+  .map-flight-plane { width: 106px; height: 75px; }
+}
+
+/* 2026-07: 飛行機もMapLibre地図上のマーカーとして表示 */
+.map-travel-plane {
+  width: 116px;
+  height: 82px;
+  z-index: 38;
+  filter: drop-shadow(0 8px 10px rgba(0, 38, 68, .28));
+}
+
+.map-travel-plane .map-travel-icon {
+  width: 100%;
+  height: 100%;
+  transform: rotate(var(--travel-bearing, 0deg));
+  transform-origin: 50% 50%;
+}
+
+.map-travel-plane-icon svg {
+  overflow: visible;
+}
+
+.map-travel-plane .plane-map-contrail {
+  fill: none;
+  stroke: rgba(255, 255, 255, .92);
+  stroke-width: 5;
+  stroke-linecap: round;
+  filter: drop-shadow(0 1px 2px rgba(20, 75, 110, .28));
+}
+
+@media (max-width: 720px) {
+  .map-travel-plane {
+    width: 94px;
+    height: 68px;
+  }
+}
+
+/* =========================================================
+   Universal Design controls
+   ========================================================= */
+.sr-only {
+  position: fixed !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.ud-panel {
+  position: fixed;
+  z-index: 80;
+  top: max(82px, calc(var(--safe-top) + 70px));
+  right: 14px;
+  width: min(430px, calc(100vw - 28px));
+  max-height: calc(100dvh - 110px);
+  overflow: auto;
+  padding: 14px 16px calc(18px + var(--safe-bottom));
+  border: 3px solid var(--border);
+  border-radius: 22px;
+  background: rgba(255,255,255,.97);
+  box-shadow: 0 18px 56px rgba(16,34,44,.30);
+  transform: translateX(calc(100% + 34px));
+  opacity: 0;
+  pointer-events: none;
+  transition: transform .26s ease, opacity .22s ease;
+}
+.ud-panel.open { transform: translateX(0); opacity: 1; pointer-events: auto; }
+.ud-panel .panel-header { position: sticky; top: -14px; z-index: 2; margin: -14px -16px 12px; padding: 16px; background: rgba(255,255,255,.98); border-bottom: 2px solid rgba(16,34,44,.12); }
+.ud-setting-group { display: grid; gap: 8px; margin: 14px 0; padding: 0; border: 0; }
+.ud-setting-group > label, .ud-setting-group legend { font-weight: 900; color: var(--ink); }
+.ud-setting-group select {
+  min-height: 50px;
+  width: 100%;
+  padding: 10px 44px 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: 13px;
+  color: var(--ink);
+  background: #fff;
+  font-weight: 800;
+}
+.segmented-control { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.segmented-control button {
+  min-height: 48px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  font-weight: 900;
+}
+.segmented-control button.active { color: #fff; background: var(--accent-dark); box-shadow: inset 0 0 0 2px #fff; }
+.ud-toggle-list { display: grid; gap: 9px; }
+.ud-toggle {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  min-height: 62px;
+  padding: 10px 12px;
+  border: 2px solid rgba(16,34,44,.24);
+  border-radius: 15px;
+  background: #f8fbfc;
+  cursor: pointer;
+}
+.ud-toggle span { display: grid; gap: 3px; }
+.ud-toggle strong { font-size: 15px; }
+.ud-toggle small { color: var(--muted); line-height: 1.35; }
+.ud-toggle input { position: absolute; opacity: 0; pointer-events: none; }
+.ud-toggle i {
+  position: relative;
+  display: block;
+  width: 54px;
+  height: 31px;
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  background: #d9e0e3;
+  transition: background .2s ease;
+}
+.ud-toggle i::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.24);
+  transition: transform .2s ease;
+}
+.ud-toggle input:checked + i { background: var(--gate); }
+.ud-toggle input:checked + i::after { transform: translateX(23px); }
+.ud-toggle:focus-within { outline: 4px solid var(--focus); outline-offset: 2px; }
+.map-text-summary { margin: 16px 0 12px; padding: 14px; border-radius: 16px; background: #eaf5f2; border: 2px solid #0b6b5e; }
+.map-text-summary h3 { margin: 0 0 7px; font-size: 17px; }
+.map-text-summary p { margin: 0 0 10px; line-height: 1.65; }
+.map-text-summary button, .reset-ud-button {
+  width: 100%; min-height: 48px; padding: 10px 14px; border: 2px solid var(--border); border-radius: 12px; font-weight: 900; color: #fff; background: var(--station-dark);
+}
+.keyboard-help { margin: 12px 0; padding: 12px; border: 2px solid rgba(16,34,44,.25); border-radius: 14px; }
+.keyboard-help summary { min-height: 32px; cursor: pointer; font-weight: 900; }
+.keyboard-help p { margin: 8px 0 0; line-height: 1.65; }
+.reset-ud-button { color: var(--ink); background: #fff; }
+
+.route-legend {
+  position: fixed;
+  z-index: 24;
+  left: 50%;
+  bottom: calc(92px + var(--safe-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(90vw, 470px);
+  padding: 7px 12px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(5,57,125,.92);
+  box-shadow: 0 8px 20px rgba(0,0,0,.25);
+  font-size: 12px;
+  font-weight: 900;
+  pointer-events: none;
+}
+.route-legend-line { display: inline-grid; place-items: center; width: 34px; height: 15px; border-radius: 999px; background: #1595ff; color: #fff; border: 2px dashed #fff; }
+
+/* Larger text modes keep the map visible while enlarging essential controls. */
+body.ud-text-large :is(.control-button, .status-bar, .area-chip, .direction-guide, .route-legend) { font-size: 1.05rem; }
+body.ud-text-large :is(.places-panel, .detail-card, .ud-panel, .permission-card) { font-size: 1.08rem; }
+body.ud-text-large .brand-copy h1 { font-size: 1.35rem; }
+body.ud-text-large .control-button { min-width: 76px; min-height: 58px; }
+body.ud-text-xlarge :is(.control-button, .status-bar, .area-chip, .direction-guide, .route-legend) { font-size: 1.15rem; }
+body.ud-text-xlarge :is(.places-panel, .detail-card, .ud-panel, .permission-card) { font-size: 1.18rem; }
+body.ud-text-xlarge .brand-copy h1 { font-size: 1.55rem; }
+body.ud-text-xlarge .control-button { min-width: 84px; min-height: 64px; }
+body.ud-text-xlarge .map-controls { gap: 8px; overflow-x: auto; max-width: calc(100vw - 24px); }
+
+/* High contrast mode keeps meaning through text, numbers and shapes, not colour alone. */
+body.ud-high-contrast {
+  --ink: #000;
+  --muted: #111;
+  --paper: #fff;
+  --paper-solid: #fff;
+  --border: #000;
+  --accent: #7b0018;
+  --accent-dark: #000;
+  --gate: #004c3f;
+  --station: #003d7a;
+  --station-dark: #000;
+  --focus: #ffdf00;
+}
+body.ud-high-contrast .maplibregl-canvas { filter: contrast(1.28) saturate(.82); }
+body.ud-high-contrast :is(.app-header,.status-bar,.direction-guide,.places-panel,.detail-card,.ud-panel,.permission-card,.area-chip) { background: #fff; border-color: #000; color: #000; }
+body.ud-high-contrast :is(button,select) { border-color: #000 !important; }
+body.ud-high-contrast .route-legend { background: #000; color: #fff; border-color: #ffdf00; }
+
+/* Users who feel motion sickness can choose this manually; system preference is also respected in JS. */
+body.ud-reduced-motion *,
+body.ud-reduced-motion *::before,
+body.ud-reduced-motion *::after {
+  scroll-behavior: auto !important;
+  animation-duration: .001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: .001ms !important;
+}
+body.ud-reduced-motion .travel-intro,
+body.ud-reduced-motion .explore-intro-glow,
+body.ud-reduced-motion .travel-map-icon { display: none !important; }
+
+/* Hide photographic markers when the user wants a simpler map. */
+body.ud-photos-hidden .photo-marker-part,
+body.ud-photos-hidden .detail-image { display: none !important; }
+body.ud-photos-hidden .overview-building-marker { display: grid !important; opacity: 1 !important; visibility: visible !important; transform: scale(var(--overview-marker-scale, 1)) !important; }
+
+/* Flat mode removes visual depth aids that no longer match the camera. */
+body.ud-flat-map .horizon-haze { opacity: .2; }
+body.ud-flat-map .soft-vignette { opacity: .1; }
+
+@media (max-width: 720px) {
+  .ud-panel { top: auto; left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 82dvh; transform: translateY(calc(100% + 30px)); border-radius: 24px 24px 18px 18px; }
+  .ud-panel.open { transform: translateY(0); }
+  .route-legend { bottom: calc(84px + var(--safe-bottom)); font-size: 11px; }
+  body.ud-text-xlarge .ud-panel { max-height: 88dvh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+}
+@media (max-width: 920px) {
+  .route-legend { bottom: calc(150px + var(--safe-bottom)); }
+}
+
+
+/* =========================================================
+   Official-style performance layer
+   - solid surfaces instead of expensive blur
+   - restrained shadows and motion
+   - clear administrative/tourism information hierarchy
+   ========================================================= */
+:root {
+  --ink: #152b3a;
+  --muted: #5b6b76;
+  --paper: #ffffff;
+  --paper-solid: #ffffff;
+  --border: #c7d1d7;
+  --accent: #8d2638;
+  --accent-dark: #661827;
+  --accent-soft: #f7edf0;
+  --gate: #176b5d;
+  --station: #185f93;
+  --station-dark: #10476e;
+  --focus: #f3bf32;
+  --shadow: 0 8px 24px rgba(15, 35, 48, .14);
+}
+
+body { background: #dcebe7; }
+body.app-loading::after {
+  content: "地図を読み込んでいます";
+  position: fixed;
+  z-index: 2000;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  padding: 14px 20px;
+  color: #fff;
+  background: #16324a;
+  border-radius: 8px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  box-shadow: 0 8px 24px rgba(0,0,0,.2);
+}
+
+.horizon-haze {
+  height: 34vh;
+  mix-blend-mode: normal;
+  background: linear-gradient(to bottom, rgba(192,226,239,.34), rgba(255,255,255,0));
+}
+.soft-vignette { display: none; }
+
+.app-header,
+.control-button,
+.places-panel,
+.detail-card,
+.permission-card,
+.ud-panel,
+.travel-message,
+.explore-intro-card {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.app-header {
+  min-height: 58px;
+  padding: 8px 14px 8px 8px;
+  border: 1px solid var(--border);
+  border-left: 5px solid var(--accent);
+  border-radius: 9px;
+  box-shadow: var(--shadow);
+}
+.brand-mark {
+  width: 40px; height: 40px; flex-basis: 40px;
+  border: 0; outline: 0; border-radius: 7px;
+  background: var(--accent);
+  font-size: 20px;
+}
+.brand-copy h1 { letter-spacing: .02em; }
+.brand-copy p { color: #647480; font-weight: 700; letter-spacing: .02em; }
+
+.status-bar {
+  min-height: 39px;
+  border-radius: 7px;
+  background: #16324a;
+  box-shadow: 0 6px 16px rgba(15,35,48,.16);
+}
+.status-icon { width: 21px; height: 21px; flex-basis: 21px; border-width: 1px; }
+
+.map-controls { gap: 6px; }
+.control-button {
+  min-width: 64px;
+  min-height: 54px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  box-shadow: 0 6px 16px rgba(15,35,48,.13);
+  transition: background-color .15s ease, border-color .15s ease;
+}
+.control-button:hover { transform: none; background: #f3f6f7; }
+.control-button.primary,
+.control-button.station-control { border: 1px solid rgba(255,255,255,.75); outline: 0; }
+
+.direction-guide,
+.area-chip,
+.route-legend {
+  border-width: 1px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 5px 15px rgba(15,35,48,.12) !important;
+  background: rgba(255,255,255,.97) !important;
+}
+
+.places-panel,
+.ud-panel {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 18px 48px rgba(15,35,48,.2);
+  transition: transform .2s ease;
+}
+.detail-card,
+.permission-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 16px 42px rgba(15,35,48,.22);
+}
+.close-button { border-width: 1px; border-radius: 8px; }
+.place-list-button { border-width: 1px; border-radius: 9px; }
+.place-list-button:hover { background: #f8f3f4; }
+
+.marker-label,
+.overview-building-marker,
+.station-picture,
+.station-picture-label,
+.station-picture-pin,
+.marker-pin {
+  box-shadow: 0 5px 13px rgba(15,35,48,.18) !important;
+}
+.station-picture img { image-rendering: auto; }
+
+.user-peek { filter: none; }
+.user-peek.waiting { animation: none; }
+.user-marker { filter: drop-shadow(0 4px 4px rgba(0,0,0,.18)); }
+.user-marker::before { animation: none !important; }
+
+/* Actual vehicles are on the MapLibre map; keep only a compact official status card. */
+.travel-intro {
+  position: fixed;
+  z-index: 90;
+  inset: 0;
+  pointer-events: none;
+  background: transparent !important;
+}
+.travel-intro::before { display: none !important; }
+.travel-message {
+  position: absolute;
+  top: calc(var(--safe-top) + 126px);
+  left: 50%;
+  width: min(470px, calc(100vw - 28px));
+  transform: translateX(-50%);
+  padding: 14px 18px;
+  color: #fff;
+  background: rgba(22,50,74,.96);
+  border: 1px solid rgba(255,255,255,.55);
+  border-radius: 9px;
+  box-shadow: 0 10px 28px rgba(7,24,38,.22);
+  text-align: left;
+}
+.travel-message h2 { margin: 2px 0 4px; font-size: clamp(20px, 4vw, 28px); }
+.travel-message p { margin: 2px 0; }
+.travel-kicker { color: #f3cf6c; font-weight: 800; }
+.travel-sky,.travel-ground,.travel-distant-town,.travel-path,.travel-vehicle,.travel-destination { display: none !important; }
+
+/* While following transport, hide image-heavy DOM markers to free the compositor. */
+body.travel-running .place-marker,
+body.travel-running .user-marker,
+body.travel-running .user-peek,
+body.travel-running .direction-guide,
+body.travel-running .area-chip,
+body.travel-running .route-legend {
+  visibility: hidden !important;
+}
+
+.explore-intro { background: rgba(15,35,48,.32); }
+.explore-intro-glow { display: none; }
+.explore-intro-card {
+  border: 1px solid #d8c28a;
+  border-radius: 12px;
+  box-shadow: 0 16px 42px rgba(15,35,48,.22);
+  animation-duration: .38s !important;
+}
+.explore-intro-route i,
+.explore-intro-route span,
+.explore-intro-route b { animation: none !important; }
+
+.map-travel-vehicle { will-change: transform; }
+.map-travel-icon { transition: none !important; filter: none !important; }
+.map-travel-plane-icon { filter: none !important; }
+
+body.ud-high-contrast .maplibregl-canvas { filter: contrast(1.16) saturate(.88); }
+
+@media (max-width: 720px) {
+  .app-header { left: 8px; max-width: calc(100vw - 190px); }
+  .map-controls { right: 8px; }
+  .control-button { min-width: 54px; min-height: 52px; padding-inline: 7px; }
+  .status-bar { left: 8px; max-width: calc(100vw - 16px); }
+  .travel-message { top: calc(var(--safe-top) + 116px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; }
+  .user-marker.walking .right-leg,
+  .user-marker.walking .left-leg,
+  .user-peek,
+  .explore-intro-card { animation: none !important; transition-duration: .01ms !important; }
+}
+
+.direction-guide, .area-chip, .route-legend, .status-bar {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+
+/* 静止・安定版: 起動演出と常時案内オーバーレイを表示しない。 */
+.travel-intro,
+.explore-intro,
+.status-bar,
+.direction-guide,
+.area-chip,
+.route-legend,
+.map-travel-vehicle {
+  display: none !important;
+}
+
+/* 地図操作中の再描画負荷を抑える。 */
+.maplibregl-canvas { will-change: auto !important; }
+.place-marker,
+.user-marker,
+.user-peek { backface-visibility: hidden; }
+.horizon-haze,
+.soft-vignette { transform: translateZ(0); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+/* =========================================================
+   Professional route planner — all breweries, Kuguri Gate and JR Saijo Station
+   ========================================================= */
+.control-button.route-control {
+  color: #fff;
+  background: #075fb8;
+  border-color: rgba(255,255,255,.82);
+}
+.control-button.route-control:hover { background: #064f99; }
+.route-planner-panel {
+  position: fixed;
+  z-index: 48;
+  top: calc(var(--safe-top) + 70px);
+  right: 14px;
+  width: min(430px, calc(100vw - 28px));
+  padding: 18px;
+  color: #10222c;
+  background: #fff;
+  border: 1px solid #17384d;
+  border-radius: 12px;
+  box-shadow: 0 18px 50px rgba(15,35,48,.24);
+  transform: translateX(calc(100% + 32px));
+  transition: transform .2s ease;
+}
+.route-planner-panel.open { transform: translateX(0); }
+.route-planner-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+.route-planner-header p {
+  margin: 0 0 3px;
+  color: #075fb8;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+.route-planner-header h2 { margin: 0; font-size: 22px; line-height: 1.25; }
+.route-planner-help { margin: 12px 0 14px; color: #52636c; font-size: 13px; line-height: 1.65; }
+.route-planner-grid {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 44px minmax(0,1fr);
+  align-items: end;
+  gap: 8px;
+}
+.route-field { display: grid; gap: 6px; min-width: 0; }
+.route-field > span { font-size: 12px; font-weight: 900; color: #334b58; }
+.route-field select {
+  width: 100%;
+  min-height: 48px;
+  padding: 8px 34px 8px 10px;
+  color: #10222c;
+  background: #fff;
+  border: 2px solid #9aaab3;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+}
+.route-field select:focus-visible { outline: 4px solid #ffca28; outline-offset: 2px; border-color: #075fb8; }
+.route-swap-button {
+  width: 44px;
+  height: 48px;
+  border: 1px solid #6d7e88;
+  border-radius: 8px;
+  color: #17384d;
+  background: #eef3f6;
+  font-size: 24px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.route-planner-actions { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 12px; }
+.route-planner-actions button {
+  min-height: 49px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+.route-show-button { color: #fff; background: #075fb8; border: 2px solid #064b8f; }
+.route-show-button:hover { background: #064f99; }
+.route-clear-button { color: #17384d; background: #fff; border: 2px solid #71828c; }
+.route-planner-result {
+  min-height: 48px;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  color: #fff;
+  background: #16324a;
+  border-left: 5px solid #2d9cff;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.55;
+}
+.route-planner-result.error { background: #7b1e2b; border-left-color: #ffca28; }
+.route-planner-legend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  color: #52636c;
+  font-size: 12px;
+  font-weight: 750;
+}
+.route-line-sample {
+  position: relative;
+  width: 62px;
+  height: 6px;
+  border-radius: 99px;
+  background: #1769e0;
+  box-shadow: 0 1px 3px rgba(25, 48, 66, .18);
+}
+.route-line-sample::after { content: ""; }
+.place-marker.route-start::after,
+.place-marker.route-destination::after {
+  position: absolute;
+  left: 50%;
+  bottom: -27px;
+  transform: translateX(-50%);
+  min-width: 24px;
+  padding: 3px 6px;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 950;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+.place-marker.route-start::after { content: "出発"; background: #168a4f; }
+.place-marker.route-destination::after { content: "到着"; background: #075fb8; }
+
+/* Selected route remains legible without being excessively thick. */
+body:not(.ud-high-contrast) .route-planner-panel { border-color: #78909c; }
+
+@media (max-width: 920px) {
+  .map-controls { grid-template-columns: repeat(6, auto); }
+  .route-planner-panel {
+    top: auto;
+    right: 8px;
+    bottom: calc(var(--safe-bottom) + 78px);
+    left: 8px;
+    width: auto;
+    max-height: 74dvh;
+    overflow: auto;
+    transform: translateY(calc(100% + 120px));
+  }
+  .route-planner-panel.open { transform: translateY(0); }
+}
+@media (max-width: 640px) {
+  .map-controls { grid-template-columns: repeat(3, 1fr); }
+  .detail-card { bottom: calc(var(--safe-bottom) + 142px); max-height: 62dvh; overflow: auto; }
+  .route-planner-panel { bottom: calc(var(--safe-bottom) + 126px); padding: 14px; }
+  .route-planner-grid { grid-template-columns: 1fr 42px 1fr; }
+  .route-field select { font-size: 13px; }
+  .route-planner-header h2 { font-size: 20px; }
+}
+@media (max-width: 420px) {
+  .route-planner-grid { grid-template-columns: 1fr 42px 1fr; }
+  .route-field > span { font-size: 11px; }
+  .route-field select { padding-left: 7px; padding-right: 22px; }
+}
+body.ud-high-contrast .route-planner-panel { border-width: 3px; }
+body.ud-high-contrast .route-field select,
+body.ud-high-contrast .route-planner-actions button { border-width: 3px; }
+body.ud-text-large .route-planner-panel { font-size: 1.05rem; }
+body.ud-text-xlarge .route-planner-panel { font-size: 1.15rem; }
+
+/* Map-page secondary brand logo */
+.brand-logo-map {
+  display: block;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  object-fit: cover;
+  border-radius: 50%;
+  box-shadow: 0 3px 10px rgba(18, 50, 74, .20);
+}
+
+
+/* Nearby spot markers and refined map chrome */
+body.map-page .app-header { border-radius:14px; border:1px solid rgba(8,47,102,.18); box-shadow:0 10px 28px rgba(8,47,102,.10); }
+body.map-page .app-header .brand-copy h1 { font-size:18px; letter-spacing:.06em; }
+.map-category-legend { position:fixed; z-index:24; top:calc(var(--site-header-height) + 12px); left:50%; transform:translateX(-50%); display:flex; gap:7px; padding:7px; background:rgba(255,255,255,.94); border:1px solid rgba(8,47,102,.16); border-radius:999px; box-shadow:0 8px 20px rgba(8,47,102,.10); pointer-events:none; }
+.map-category-legend span { display:flex; align-items:center; gap:6px; color:#26384e; font-size:11px; font-weight:850; }
+.map-category-legend i { width:24px; height:24px; display:grid; place-items:center; color:#fff; background:#8b2635; border-radius:7px; font-style:normal; font-size:11px; }
+.map-category-legend .legend-spot i { background:#082f66; border-radius:50%; }
+.place-marker.spot { z-index:3; }
+.nearby-spot-pin { position:absolute; left:50%; bottom:0; transform:translateX(-50%); width:42px; height:42px; display:grid; place-items:center; color:#fff; background:#082f66; border:3px solid #fff; outline:2px solid #061d3d; border-radius:50% 50% 50% 12px; box-shadow:0 8px 18px rgba(8,47,102,.28); font-size:12px; font-weight:950; }
+.nearby-spot-pin.rest { background:#b76100; outline-color:#7f4100; }
+.nearby-spot-pin.accessibility { background:#0b7c68; outline-color:#075346; }
+.nearby-spot-pin.culture { background:#5b4a9a; outline-color:#382c6d; }
+.nearby-spot-label { position:absolute; left:50%; bottom:51px; transform:translateX(-50%); width:max-content; max-width:175px; padding:6px 9px; color:#10243c; background:rgba(255,255,255,.97); border:1px solid rgba(8,47,102,.25); border-radius:8px; box-shadow:0 6px 15px rgba(8,47,102,.10); font-size:12px; font-weight:900; white-space:nowrap; }
+.place-marker.spot:hover .nearby-spot-pin,.place-marker.spot.selected .nearby-spot-pin { transform:translateX(-50%) scale(1.14); }
+.list-number.spot,.detail-number.spot { background:#082f66; outline-color:#061d3d; border-radius:50%; font-size:12px; }
+.places-list-section-title { margin:18px 2px 4px; padding-top:16px; color:#082f66; border-top:1px solid #e1e7ee; font-size:13px; letter-spacing:.08em; }
+@media(max-width:720px){.map-category-legend{top:calc(var(--site-header-height) + 72px)}.nearby-spot-label{font-size:11px;max-width:145px}}
+
+/* Added nearby shopping landmark */
+.nearby-spot-pin.shopping { background:#b34e00; outline-color:#713000; }
+.legend-shopping i { background:#b34e00 !important; color:#fff; border-color:#713000 !important; }
+
+
+/* =========================================================
+   MAP-ONLY EXTRACTION
+   The portal header/common.css were intentionally removed.
+   This keeps the map UI full-screen and self-contained.
+   ========================================================= */
+:root { --site-header-height: 0px; }
+body.map-only #map { inset: 0; width: 100%; height: 100%; }
+body.map-only .horizon-haze,
+body.map-only .soft-vignette { top: 0; }
+body.map-only .app-header { display: flex; }
+
+@media (max-width: 680px) {
+  body.map-only .app-header { display: flex; }
+}
+
+
+
+
+
+/*
+  選択後の青い案内ルートを、斜め3D表示でも確実に確認できるようにする
+  最前面オーバーレイ。白い道路より細い青線だけを描き、操作は妨げません。
+*/
+.active-route-top-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   v15 遠景用 酒蔵ミニ建築
+   初期カメラでも「アイコン」ではなく建物に見える2.5D表現。
+   拡大時の写真切替は従来どおり維持する。
+   ========================================================= */
+.place-marker.brewery .overview-building-marker.brewery-mini {
+  width: 116px;
+  height: 82px;
+  min-height: 82px;
+  padding: 0;
+  overflow: visible;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.place-marker.brewery .overview-building-shadow {
+  position: absolute;
+  left: 10px;
+  right: 6px;
+  bottom: -1px;
+  height: 13px;
+  border-radius: 50%;
+  background: rgba(20, 30, 32, .24);
+  filter: blur(4px);
+  transform: skewX(-18deg);
+}
+.place-marker.brewery .overview-building-main,
+.place-marker.brewery .overview-building-wing {
+  position: absolute;
+  display: block;
+  transform-origin: center bottom;
+}
+.place-marker.brewery .overview-building-main {
+  left: 30px;
+  bottom: 5px;
+  width: 72px;
+  height: 55px;
+  z-index: 4;
+}
+.place-marker.brewery .overview-building-wall,
+.place-marker.brewery .wing-wall {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: block;
+  background:
+    linear-gradient(to bottom, #fffdf6 0 66%, #72513a 66% 100%);
+  border: 2px solid #5d686b;
+  border-top-width: 1px;
+  border-radius: 2px 2px 4px 4px;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.84), inset -7px 0 10px rgba(43,52,54,.08);
+}
+.place-marker.brewery .overview-building-wall { height: 36px; }
+.place-marker.brewery .overview-building-roof,
+.place-marker.brewery .wing-roof {
+  position: absolute;
+  z-index: 3;
+  display: block;
+  background: linear-gradient(to bottom, #4a5355 0%, #2e3638 57%, #202729 100%);
+  clip-path: polygon(3% 100%, 13% 33%, 50% 0, 87% 33%, 97% 100%);
+  filter: drop-shadow(0 3px 2px rgba(0,0,0,.28));
+}
+.place-marker.brewery .overview-building-roof {
+  left: -5px;
+  right: -5px;
+  top: 0;
+  height: 22px;
+  border: 0;
+}
+.place-marker.brewery .overview-building-roof::after,
+.place-marker.brewery .wing-roof::after {
+  content: "";
+  position: absolute;
+  left: 19%;
+  right: 19%;
+  top: 3px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(10,16,18,.78);
+}
+.place-marker.brewery .overview-building-wing {
+  left: 5px;
+  bottom: 5px;
+  width: 43px;
+  height: 41px;
+  z-index: 5;
+}
+.place-marker.brewery .wing-wall { height: 27px; }
+.place-marker.brewery .wing-roof {
+  left: -4px;
+  right: -4px;
+  top: 0;
+  height: 17px;
+}
+.place-marker.brewery .overview-building-chimney {
+  position: absolute;
+  right: 4px;
+  bottom: 23px;
+  z-index: 2;
+  display: none;
+  width: 9px;
+  height: 48px;
+  border: 1px solid #5f3a2c;
+  border-radius: 1px 1px 0 0;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.13) 0 1px, transparent 1px 6px),
+    repeating-linear-gradient(90deg, transparent 0 4px, rgba(77,42,31,.20) 4px 5px),
+    linear-gradient(#a2674b, #794532);
+  box-shadow: 2px 4px 4px rgba(0,0,0,.22);
+}
+.place-marker.brewery .overview-building-chimney::before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  top: -4px;
+  height: 5px;
+  border: 1px solid #563326;
+  background: #6b3f30;
+}
+.place-marker.brewery .mini-window,
+.place-marker.brewery .mini-door {
+  position: absolute;
+  display: block;
+  border: 1px solid rgba(42,55,58,.72);
+  background: #dfe8e5;
+}
+.place-marker.brewery .mini-window { top: 8px; width: 8px; height: 8px; }
+.place-marker.brewery .mini-window-1 { left: 12px; }
+.place-marker.brewery .mini-window-2 { right: 12px; }
+.place-marker.brewery .mini-door {
+  left: 50%;
+  bottom: 0;
+  width: 10px;
+  height: 15px;
+  transform: translateX(-50%);
+  background: #5f4434;
+  border-color: #473326;
+}
+.place-marker.brewery .overview-building-number {
+  top: auto;
+  left: 58px;
+  bottom: 10px;
+  z-index: 9;
+  width: 25px;
+  height: 25px;
+  border-width: 2px;
+  outline-width: 1px;
+  font-size: 12px;
+}
+.place-marker.brewery .overview-building-name {
+  bottom: 91px;
+  z-index: 14;
+}
+
+/* 山陽鶴：横長の黒松蔵風。低く広い屋根と左の直売棟。 */
+.place-sanyotsuru .overview-building-main { left: 24px; width: 80px; height: 50px; }
+.place-sanyotsuru .overview-building-wall { height: 32px; background: linear-gradient(to bottom,#f7f2e8 0 64%,#694a36 64% 100%); }
+.place-sanyotsuru .overview-building-wing { left: 2px; width: 48px; height: 35px; }
+.place-sanyotsuru .overview-building-roof,
+.place-sanyotsuru .wing-roof { background: linear-gradient(#484b49,#2d3332 60%,#222827); }
+
+/* 白牡丹：延宝蔵・天保蔵を思わせる、二つの白壁蔵が並ぶシルエット。 */
+.place-hakubotan .overview-building-main { left: 54px; width: 52px; height: 58px; }
+.place-hakubotan .overview-building-wing { left: 8px; width: 53px; height: 54px; z-index: 3; }
+.place-hakubotan .overview-building-wall,
+.place-hakubotan .wing-wall { background: linear-gradient(to bottom,#fffdf7 0 74%,#80604a 74% 100%); }
+.place-hakubotan .overview-building-roof,
+.place-hakubotan .wing-roof { background: linear-gradient(#4a4e4d,#303534 62%,#222827); }
+
+/* 西條鶴：細長いレンガ煙突を遠景でも強いランドマークにする。 */
+.place-saijotsuru .overview-building-chimney { display:block; right: 3px; height: 59px; bottom: 20px; }
+.place-saijotsuru .overview-building-main { left: 27px; width: 69px; }
+.place-saijotsuru .overview-building-wing { width: 38px; left: 7px; }
+.place-saijotsuru .overview-building-name { bottom: 101px; }
+
+/* 賀茂鶴：最も大きい蔵群＋太めの煙突。 */
+.place-kamotsuru .overview-building-main { left: 28px; bottom:4px; width: 80px; height: 61px; }
+.place-kamotsuru .overview-building-wall { height: 40px; }
+.place-kamotsuru .overview-building-wing { left: 0; width: 50px; height: 43px; }
+.place-kamotsuru .overview-building-chimney { display:block; right: 1px; width: 10px; height: 61px; bottom: 25px; }
+.place-kamotsuru .overview-building-name { bottom: 105px; }
+
+/* 亀齢：密度の高い白壁と青みのある瓦、左奥の細い煙突。 */
+.place-kirei .overview-building-main { left: 34px; width: 63px; height: 59px; }
+.place-kirei .overview-building-wing { left: 8px; width: 39px; height: 43px; }
+.place-kirei .overview-building-roof,
+.place-kirei .wing-roof { background: linear-gradient(#53616a,#344149 62%,#273138); }
+.place-kirei .overview-building-chimney { display:block; left: 5px; right:auto; width: 8px; height: 49px; bottom: 24px; background: linear-gradient(#856050,#674538); }
+.place-kirei .overview-building-name { bottom: 98px; }
+
+/* 福美人：前面に横長の酒造学校・展示棟風の低層棟、奥に蔵と煙突。 */
+.place-fukubijin .overview-building-main { left: 38px; width: 66px; height: 57px; }
+.place-fukubijin .overview-building-wing { left: 2px; bottom: 4px; width: 76px; height: 31px; z-index: 7; }
+.place-fukubijin .wing-wall { height: 20px; background: linear-gradient(to bottom,#f4ebdd 0 55%,#785139 55% 100%); }
+.place-fukubijin .wing-roof { height: 14px; clip-path: polygon(2% 100%,10% 38%,50% 7%,90% 38%,98% 100%); }
+.place-fukubijin .overview-building-chimney { display:block; right: 4px; height: 54px; bottom: 23px; }
+.place-fukubijin .overview-building-name { bottom: 100px; }
+
+/* 賀茂泉：酒泉館・和泉館の複数棟感。木部を多く、横方向へ広がる。 */
+.place-kamoizumi .overview-building-main { left: 34px; width: 72px; height: 54px; }
+.place-kamoizumi .overview-building-wing { left: 2px; width: 48px; height: 45px; }
+.place-kamoizumi .overview-building-wall,
+.place-kamoizumi .wing-wall { background: linear-gradient(to bottom,#f8f3e9 0 55%,#674a36 55% 100%); }
+.place-kamoizumi .overview-building-roof,
+.place-kamoizumi .wing-roof { background: linear-gradient(#46534f,#2c3935 62%,#222d2a); }
+
+@media (max-width: 640px) {
+  .place-marker.brewery .overview-building-marker.brewery-mini {
+    width: 102px;
+    height: 74px;
+  }
+  .place-marker.brewery .overview-building-main,
+  .place-marker.brewery .overview-building-wing,
+  .place-marker.brewery .overview-building-chimney {
+    transform: scale(.88);
+    transform-origin: center bottom;
+  }
+  .place-marker.brewery .overview-building-name {
+    bottom: 84px;
+  }
+  .place-saijotsuru .overview-building-name,
+  .place-kamotsuru .overview-building-name,
+  .place-kirei .overview-building-name,
+  .place-fukubijin .overview-building-name {
+    bottom: 94px;
+  }
+}
+
+
+/* =========================================================
+   v16: 透明のミニ建物マーカーをやめ、実際の3D酒蔵オブジェクトの上に
+   名前ラベルだけを出す。遠景でも「建物そのもの」が見える構成。
+   ========================================================= */
+.overview-building-label-marker,
+.overview-building-label-marker .overview-building-name-box,
+.overview-building-label-marker .overview-building-name-badge {
+  transition: opacity 220ms ease, visibility 220ms ease, transform 220ms ease;
+}
+
+.overview-building-label-marker {
+  position: absolute;
+  left: 50%;
+  bottom: 62px;
+  transform: translateX(-50%) scale(var(--overview-marker-scale, .82));
+  transform-origin: center bottom;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  z-index: 7;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: none;
+}
+
+.overview-building-name-box {
+  display: block;
+  width: max-content;
+  max-width: 168px;
+  padding: 6px 10px;
+  color: #183247;
+  background: #ffffff;
+  border: 2px solid rgba(31,57,70,.82);
+  border-radius: 999px;
+  box-shadow: 0 5px 14px rgba(17,36,45,.18);
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1.15;
+  letter-spacing: -.01em;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.overview-building-name-badge {
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  color: #fff;
+  background: var(--accent);
+  border: 3px solid #fff;
+  outline: 2px solid var(--accent-dark);
+  border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(0,0,0,.18);
+  font-size: 13px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.place-marker.station .overview-building-name-badge {
+  background: var(--station);
+  outline-color: var(--station-dark);
+}
+.place-marker.gate .overview-building-name-badge {
+  background: var(--gate);
+  outline-color: #064a40;
+}
+.place-marker.station .overview-building-name-box {
+  color: #092f55;
+  border-color: rgba(10,61,115,.8);
+}
+.place-marker.gate .overview-building-name-box {
+  color: #064a40;
+  border-color: rgba(6,74,64,.78);
+}
+
+#map.overview-marker-mode .overview-building-marker {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transform: translateX(-50%) scale(.6) translateY(10px) !important;
+}
+#map.overview-marker-mode .overview-building-label-marker {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+#map.photo-marker-mode .overview-building-label-marker {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transform: translateX(-50%) scale(.72) translateY(10px) !important;
+}
+
+.place-marker.route-start .overview-building-label-marker,
+.place-marker.route-start .station-picture,
+.place-marker.route-start .marker-pin {
+  outline: 4px solid #18a558;
+  outline-offset: 3px;
+  border-radius: 20px;
+}
+.place-marker.route-destination .overview-building-label-marker,
+.place-marker.route-destination .station-picture,
+.place-marker.route-destination .marker-pin {
+  outline: 4px solid #087cff;
+  outline-offset: 3px;
+  border-radius: 20px;
+}
+
+@media (max-width: 640px) {
+  .overview-building-label-marker {
+    bottom: 54px;
+    gap: 5px;
+  }
+  .overview-building-name-box {
+    max-width: 138px;
+    padding: 5px 8px;
+    font-size: 10.5px;
+  }
+  .overview-building-name-badge {
+    min-width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+}
+
+
+/* v17: 建物・酒蔵表示を薄くしない */
+#map.overview-marker-mode .overview-building-label-marker,
+.place-marker.brewery,
+.place-marker.gate {
+  opacity: 1 !important;
+}
+
+
+/* v18: 酒蔵オブジェクトは透けなし。ラベルも漆喰・瓦の落ち着いた色調に合わせる。 */
+.overview-building-name-box {
+  color: #202e35;
+  background: rgba(250, 249, 245, .98);
+  border-color: rgba(54, 62, 64, .88);
+}
+
+
+/* v19: 遠景ラベルも不透明100%。 */
+.overview-building-label-marker .overview-building-name-box{background:#fff!important;opacity:1!important;}
+.overview-building-label-marker .overview-building-name-badge{opacity:1!important;}
+
+
+/* =========================================================
+   v20: 拡大時の写真＋名前を3D建物の「上」に配置する。
+   建物そのものは隠さず、写真カードが蔵の立体物へ重ならないよう持ち上げる。
+   ========================================================= */
+.place-marker.brewery.has-picture {
+  --photo-building-lift: 92px;
+}
+
+/* 高さ・煙突・複数棟の違いに合わせて、酒蔵ごとに少しだけ位置を調整。 */
+.place-marker.place-sanyotsuru   { --photo-building-lift: 88px; }
+.place-marker.place-hakubotan    { --photo-building-lift: 94px; }
+.place-marker.place-saijotsuru   { --photo-building-lift: 108px; }
+.place-marker.place-kamotsuru    { --photo-building-lift: 112px; }
+.place-marker.place-kirei        { --photo-building-lift: 102px; }
+.place-marker.place-fukubijin    { --photo-building-lift: 108px; }
+.place-marker.place-kamoizumi    { --photo-building-lift: 98px; }
+
+/* 写真は建物の上。建物の中心や屋根へ被せない。 */
+#map.photo-marker-mode .place-marker.brewery.has-picture .station-picture {
+  bottom: var(--photo-building-lift);
+  width: 138px;
+  box-shadow: 0 12px 26px rgba(16, 39, 50, .28);
+}
+
+/* 名前は写真カードのさらに上へ。 */
+#map.photo-marker-mode .place-marker.brewery.has-picture .station-picture-label {
+  bottom: calc(var(--photo-building-lift) + 99px);
+  max-width: 178px;
+  font-size: 13px;
+  z-index: 12;
+}
+
+/* 番号ピンは建物付近に残し、写真カードと役割を分ける。 */
+#map.photo-marker-mode .place-marker.brewery.has-picture .station-picture-pin {
+  bottom: 8px;
+}
+
+/* 選択時に写真が大きくなっても、上方向の配置を維持する。 */
+#map.photo-marker-mode .place-marker.brewery.has-picture:hover .station-picture,
+#map.photo-marker-mode .place-marker.brewery.has-picture.selected .station-picture {
+  transform: translateX(-50%) scale(1.045);
+  transform-origin: center bottom;
+}
+
+@media (max-width: 640px) {
+  .place-marker.brewery.has-picture { --photo-building-lift: 70px; }
+  .place-marker.place-sanyotsuru   { --photo-building-lift: 66px; }
+  .place-marker.place-hakubotan    { --photo-building-lift: 70px; }
+  .place-marker.place-saijotsuru   { --photo-building-lift: 80px; }
+  .place-marker.place-kamotsuru    { --photo-building-lift: 84px; }
+  .place-marker.place-kirei        { --photo-building-lift: 76px; }
+  .place-marker.place-fukubijin    { --photo-building-lift: 80px; }
+  .place-marker.place-kamoizumi    { --photo-building-lift: 73px; }
+
+  #map.photo-marker-mode .place-marker.brewery.has-picture .station-picture {
+    bottom: var(--photo-building-lift);
+    width: 106px;
+  }
+  #map.photo-marker-mode .place-marker.brewery.has-picture .station-picture-label {
+    bottom: calc(var(--photo-building-lift) + 78px);
+    max-width: 142px;
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+  #map.photo-marker-mode .place-marker.brewery.has-picture .station-picture-pin {
+    bottom: 5px;
+  }
+}
+
+/* =========================================================
+   v22: 青ルートは道路・3D建物より前のまま、写真・名称・番号などの
+   HTMLマーカーよりは後ろに置く。写真の上を青線が横切らない。
+   青ルート自体の色・太さ・形・経路計算は変更しない。
+   ========================================================= */
+#map .maplibregl-marker,
+#map .place-marker {
+  z-index: 14 !important;
+}
+
+#map .place-marker .station-picture,
+#map .place-marker .station-picture-label,
+#map .place-marker .station-picture-pin,
+#map .place-marker .overview-building-label-marker,
+#map .place-marker .nearby-spot-label,
+#map .place-marker .nearby-spot-pin,
+#map .place-marker .marker-label,
+#map .place-marker .marker-pin {
+  position: absolute;
+  z-index: 15;
+}
+
+
+/* v23: 青ルートはMapLibre内で道路より上・3D建物より下に描画するため、最前面Canvasは使わない。 */
+.active-route-top-canvas { display: none !important; }
+
+
+/* =========================================================
+   v24: JR西条駅・くらら・東広島市立美術館・ゆめタウン東広島
+   酒蔵と同じ「遠景=3D建物+名前 / 拡大=写真」の見せ方。
+   ========================================================= */
+
+.place-marker.featured-landmark {
+  --photo-building-lift: 94px;
+}
+.place-marker.place-saijo-station { --photo-building-lift: 108px; }
+.place-marker.place-kurara { --photo-building-lift: 108px; }
+.place-marker.place-city-museum { --photo-building-lift: 118px; }
+.place-marker.place-yume-town { --photo-building-lift: 122px; }
+
+.overview-building-label-marker.landmark-label .overview-building-name-box {
+  max-width: 235px;
+  color: #17334a;
+  border-color: rgba(46, 74, 92, .84);
+}
+.overview-building-label-marker.landmark-label.station .overview-building-name-badge {
+  background: #1d6aa7;
+  outline-color: #0c4774;
+}
+.overview-building-label-marker.landmark-label.culture .overview-building-name-badge {
+  background: #5c5a82;
+  outline-color: #3f3d61;
+}
+.overview-building-label-marker.landmark-label.shopping .overview-building-name-badge {
+  background: #a43741;
+  outline-color: #73242b;
+}
+
+#map.photo-marker-mode .place-marker.featured-landmark .station-picture {
+  bottom: var(--photo-building-lift);
+  width: 142px;
+}
+#map.photo-marker-mode .place-marker.featured-landmark .station-picture-label {
+  bottom: calc(var(--photo-building-lift) + 102px);
+  max-width: 245px;
+  font-size: 12.5px;
+}
+#map.photo-marker-mode .place-marker.featured-landmark .station-picture-pin {
+  bottom: 7px;
+}
+
+/* 西条駅は「駅 + 駅2階の観光案内所」を1つの建物にまとめ、拡大時だけ2枚表示 */
+.station-dual-picture {
+  position: absolute;
+  left: 50%;
+  bottom: var(--photo-building-lift);
+  width: 278px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  transform: translateX(-50%);
+  z-index: 16;
+  pointer-events: none;
+}
+.dual-photo-card {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 3 / 2;
+  background: #e9eef1;
+  border: 4px solid #fff;
+  outline: 2px solid #255e86;
+  border-radius: 13px;
+  box-shadow: 0 11px 25px rgba(16, 39, 50, .28);
+}
+.dual-photo-card img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.dual-photo-card b {
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  bottom: 5px;
+  padding: 4px 5px;
+  color: #fff;
+  background: rgba(13, 45, 66, .86);
+  border-radius: 7px;
+  font-size: 10px;
+  line-height: 1.15;
+  text-align: center;
+}
+.station-combined-label {
+  bottom: calc(var(--photo-building-lift) + 103px) !important;
+  max-width: 290px !important;
+  font-size: 12.5px !important;
+}
+.place-marker.place-saijo-station .station-picture-pin {
+  background: #1d6aa7;
+  outline-color: #0c4774;
+}
+
+.place-marker.featured-landmark .landmark-picture {
+  outline-color: #475f70;
+  background: #eef2f3;
+}
+.place-marker.featured-landmark .landmark-picture-label {
+  color: #213b4c;
+  border-color: #5a7486;
+}
+.place-marker.place-yume-town .landmark-picture {
+  outline-color: #8e3038;
+}
+.place-marker.place-yume-town .landmark-picture-label {
+  color: #762832;
+  border-color: #a43741;
+}
+.place-marker.place-yume-town .landmark-picture-pin.shopping {
+  background: #a43741;
+  outline-color: #73242b;
+}
+.place-marker.place-kurara .landmark-picture-pin,
+.place-marker.place-city-museum .landmark-picture-pin {
+  background: #5c5a82;
+  outline-color: #3f3d61;
+}
+
+#map.overview-marker-mode .place-marker.featured-landmark .photo-marker-part {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+#map.photo-marker-mode .place-marker.featured-landmark .photo-marker-part {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+#map.photo-marker-mode .place-marker.featured-landmark .overview-building-label-marker {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* 青ルートより写真・名称は前面。建物自体はMapLibre内で青ルートより上。 */
+#map .station-dual-picture,
+#map .place-marker.featured-landmark .station-picture,
+#map .place-marker.featured-landmark .station-picture-label,
+#map .place-marker.featured-landmark .station-picture-pin,
+#map .place-marker.featured-landmark .overview-building-label-marker {
+  z-index: 16;
+}
+
+@media (max-width: 640px) {
+  .place-marker.place-saijo-station { --photo-building-lift: 84px; }
+  .place-marker.place-kurara { --photo-building-lift: 82px; }
+  .place-marker.place-city-museum { --photo-building-lift: 91px; }
+  .place-marker.place-yume-town { --photo-building-lift: 94px; }
+
+  #map.photo-marker-mode .place-marker.featured-landmark .station-picture {
+    width: 108px;
+  }
+  #map.photo-marker-mode .place-marker.featured-landmark .station-picture-label {
+    bottom: calc(var(--photo-building-lift) + 80px);
+    max-width: 180px;
+    font-size: 10.5px;
+  }
+  .station-dual-picture {
+    width: 210px;
+    gap: 6px;
+  }
+  .dual-photo-card {
+    border-width: 3px;
+    border-radius: 11px;
+  }
+  .dual-photo-card b {
+    font-size: 8.5px;
+  }
+  .station-combined-label {
+    bottom: calc(var(--photo-building-lift) + 80px) !important;
+    max-width: 220px !important;
+    font-size: 10.5px !important;
+  }
+}
+
+
+/* v25: くぐり門周辺の情報をまとめて見やすくする。 */
+.place-marker.place-kugurimon { --photo-building-lift: 88px; }
+.place-marker.place-kugurimon .overview-building-name-box {
+  max-width: 220px;
+}
+@media (max-width: 640px) {
+  .place-marker.place-kugurimon { --photo-building-lift: 72px; }
+  .place-marker.place-kugurimon .overview-building-name-box {
+    max-width: 160px;
+  }
+}
+
+
+/* v27: 南東端のゆめタウン東広島を俯瞰でも見失わない。 */
+.place-marker.place-yume-town .overview-building-label-marker {
+  bottom: 72px;
+}
+.place-marker.place-yume-town .overview-building-name-box {
+  min-width: 138px;
+  padding: 7px 11px;
+  border-width: 2px;
+  font-size: 12.5px;
+}
+@media (max-width: 640px) {
+  .place-marker.place-yume-town .overview-building-label-marker { bottom: 62px; }
+  .place-marker.place-yume-town .overview-building-name-box {
+    min-width: 118px;
+    font-size: 11px;
+  }
+}
+
+
+/* =========================================================
+   v28 Navigation refinement
+   - ルート確定後はルートボタンを自動で小さくする
+   - パネルは自動収納し、地図を隠さない
+   ========================================================= */
+.control-button.route-control.route-active-compact {
+  width: 48px !important;
+  min-width: 48px !important;
+  max-width: 48px !important;
+  min-height: 48px !important;
+  height: 48px !important;
+  padding: 0 !important;
+  justify-self: end;
+  border-radius: 50% !important;
+  gap: 0 !important;
+  overflow: hidden;
+}
+.control-button.route-control.route-active-compact > span:last-child {
+  display: none !important;
+}
+.control-button.route-control.route-active-compact .control-icon {
+  width: auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  font-size: 11px;
+  line-height: 1;
+}
+@media (max-width: 640px) {
+  .control-button.route-control.route-active-compact {
+    width: 46px !important;
+    min-width: 46px !important;
+    max-width: 46px !important;
+    height: 46px !important;
+    min-height: 46px !important;
+    justify-self: center;
+  }
+}
+
+
+/* =========================================================
+   v29 Route trace / transient outside-area notice
+   ========================================================= */
+.map-toast {
+  position: fixed;
+  z-index: 80;
+  left: 50%;
+  bottom: calc(max(18px, env(safe-area-inset-bottom)) + 92px);
+  max-width: min(88vw, 430px);
+  padding: 11px 16px;
+  color: #fff;
+  background: rgba(18, 45, 62, .96);
+  border: 2px solid rgba(255,255,255,.92);
+  border-radius: 999px;
+  box-shadow: 0 10px 28px rgba(12, 31, 42, .24);
+  font-size: 14px;
+  font-weight: 850;
+  line-height: 1.35;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 12px);
+  transition: opacity .2s ease, transform .2s ease;
+}
+.map-toast.visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+@media (max-width: 640px) {
+  .map-toast {
+    bottom: calc(max(12px, env(safe-area-inset-bottom)) + 82px);
+    max-width: calc(100vw - 28px);
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .map-toast { transition: none; }
+}
+
+/* =========================================================
+   v30: 操作後はボタンを小さくして地図の表示面積を確保
+   ========================================================= */
+.control-button.ui-action-compact {
+  width: 48px !important;
+  min-width: 48px !important;
+  max-width: 48px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  gap: 0 !important;
+  overflow: hidden;
+}
+.control-button.ui-action-compact > span:last-child {
+  display: none !important;
+}
+.control-button.ui-action-compact .control-icon {
+  width: auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  font-size: 17px;
+  line-height: 1;
+}
+@media (max-width: 640px) {
+  .control-button.ui-action-compact {
+    width: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    justify-self: center;
+  }
+}
+
+
+/* =========================================================
+   v31 Air route glow
+   遠景時のみ、青ルートの上空に光の帯と光点を浮かせる。
+   HTMLマーカー(写真・名称)より下、MapLibre地図より上。
+   ========================================================= */
+.route-air-glow-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+#map.photo-marker-mode .route-air-glow-canvas {
+  opacity: 0;
+  visibility: hidden;
+}
+body.ud-reduced-motion .route-air-glow-canvas {
+  transition: none !important;
+}
+
+/* V63 accessible map UI */
+.v63-accessibility-bar{position:fixed;left:16px;right:16px;bottom:16px;z-index:2400;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:10px 12px;border:1px solid rgba(16,34,44,.16);border-radius:18px;background:rgba(255,255,255,.96);box-shadow:0 12px 36px rgba(16,34,44,.18);backdrop-filter:blur(12px)}
+.v63-accessibility-bar button{min-height:48px;padding:10px 14px;border:2px solid #075a73;border-radius:999px;background:#fff;color:#043d4e;font-weight:800;cursor:pointer}
+.v63-accessibility-bar button[aria-pressed="true"]{background:#075a73;color:#fff}
+.v63-accessibility-bar button:focus-visible,.v63-text-map button:focus-visible{outline:4px solid #ffbf00;outline-offset:3px}
+.v63-map-panel{position:fixed;z-index:2600;inset:auto 16px 92px 16px;max-height:min(72vh,760px);overflow:auto;background:#fff;color:#17242b;border:2px solid #075a73;border-radius:22px;box-shadow:0 24px 70px rgba(16,34,44,.24);padding:20px;display:none}
+.v63-map-panel.is-open{display:block}
+.v63-map-panel header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.v63-map-panel h2{margin:0;font-size:clamp(1.35rem,3vw,2rem);line-height:1.25}
+.v63-map-panel p{margin:.5rem 0;color:#465760}
+.v63-close{min-width:48px;min-height:48px;border:2px solid #075a73;border-radius:12px;background:#fff;color:#043d4e;font-size:1.4rem;font-weight:800;cursor:pointer}
+.v63-filter-grid{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+.v63-filter{min-height:48px;padding:10px 14px;border:2px solid #075a73;border-radius:999px;background:#fff;color:#043d4e;font-weight:800}
+.v63-filter[aria-pressed="true"]{background:#075a73;color:#fff}
+.v63-facility-list{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.v63-facility-card{border:1px solid #b8c7cc;border-radius:14px;background:#fff}
+.v63-facility-card button{width:100%;min-height:72px;display:flex;align-items:center;gap:12px;padding:12px 14px;border:0;border-radius:14px;background:transparent;color:#17242b;text-align:left;cursor:pointer}
+.v63-facility-icon{width:42px;height:42px;display:grid;place-items:center;flex:none;border-radius:10px;background:#eef5f6;font-size:1.2rem;font-weight:900}
+.v63-facility-name{font-weight:850}.v63-facility-meta{display:block;color:#465760;font-size:.92rem}
+.v63-info-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}.v63-tag{display:inline-block;padding:2px 7px;border:1px solid #b8c7cc;border-radius:999px;font-size:.78rem;color:#465760}
+.v63-text-map{margin-top:18px;padding-top:18px;border-top:2px solid #d7e1e4}
+.v63-text-map h3{margin:0 0 8px;font-size:1.2rem}.v63-text-map ul{margin:0;padding-left:1.25rem}.v63-text-map li{margin:.65rem 0}
+.v63-note{padding:12px;border-left:4px solid #075a73;background:#f2f6f7;color:#465760}
+@media (min-width:900px){.v63-accessibility-bar{left:50%;right:auto;transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px)}.v63-map-panel{left:auto;width:min(480px,calc(100% - 32px))}}
+@media (prefers-reduced-motion:reduce){.v63-accessibility-bar,.v63-map-panel{scroll-behavior:auto}}
+@media (max-width:767px){.v63-accessibility-bar{bottom:10px;gap:6px}.v63-accessibility-bar button{flex:1 1 calc(50% - 6px);min-width:44px}.v63-map-panel{bottom:122px;left:10px;right:10px;padding:16px}}
+
+
+/* V71 final map palette override — dark text and solid light panels */
+:root{
+  --ink:#102d42;--muted:#415b6a;--paper:rgba(255,255,255,.97);--paper-solid:#ffffff;
+  --border:#163d54;--accent:#006b88;--accent-dark:#00485d;--accent-soft:#e2f4f7;
+  --gate:#075f58;--station:#075ca8;--station-dark:#073c5a;--focus:#704200;--road:#ffffff;
+  --shadow:0 12px 32px rgba(10,47,72,.16);
+}
+html[data-color-mode="safe"]{
+  --accent:#005f7d;--accent-dark:#003e55;--accent-soft:#e4f4f8;
+  --gate:#005f58;--station:#005ca8;--station-dark:#073c5a;--focus:#704200;
+}
+body.ud-high-contrast{
+  --ink:#000000;--muted:#202020;--paper:#ffffff;--paper-solid:#ffffff;--border:#000000;
+  --accent:#004f6b;--accent-dark:#003247;--accent-soft:#e4f5fa;--gate:#004f46;
+  --station:#003d7a;--station-dark:#000000;--focus:#704200;
+}
+body{background:#e7f5f8}
+.maplibregl-map{background:linear-gradient(#d6f1fa,#ffffff 48%,#e1f3e8)}
+.maplibregl-ctrl-attrib{max-width:min(64vw,460px);padding:3px 6px!important;border-radius:4px;background:rgba(255,255,255,.98)!important;color:#102d42!important;opacity:1!important;font-size:11px!important;line-height:1.4!important}
+.place-list-button:hover{border-color:var(--accent)!important;background:#e7f5f8!important}
+.map-category-legend i{background:var(--accent)!important}
+.nearby-spot-pin{background:#075ca8!important;outline-color:#073c5a!important}
+.nearby-spot-pin.rest,.nearby-spot-pin.shopping{background:#765917!important;outline-color:#5b4300!important}
+.nearby-spot-pin.accessibility{background:#075f58!important;outline-color:#004f46!important}
+.nearby-spot-pin.culture{background:#006b88!important;outline-color:#00485d!important}
+.nearby-spot-label{background:rgba(255,255,255,.98)!important;color:#102d42!important;border-color:#b7cbd3!important}
+body.ud-high-contrast .nearby-spot-label{background:#fff!important;color:#000!important;border-color:#000!important}
+button:focus-visible,a:focus-visible,[role="button"]:focus-visible,.place-marker:focus-visible .marker-pin,.ud-toggle:focus-within{
+  outline:3px solid #704200!important;outline-offset:3px!important;box-shadow:0 0 0 3px #ffffff,0 0 0 6px #704200!important;
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}}
+
+
+/* Simple mode: no decorative person peeking from the bottom edge of the map. */
+.user-peek { display: none !important; }

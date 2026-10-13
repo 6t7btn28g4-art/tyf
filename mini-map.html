@@ -1,0 +1,720 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>西条 ルートミニマップ</title>
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
+<link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+
+
+
+<style id="github-pages-v70-css">
+
+/* ===== GitHub Pages V70 bundled CSS ===== */
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;color:#10253e;background:#eaf0f3}
+*{box-sizing:border-box}
+html,body,#miniMap{width:100%;height:100%;margin:0}
+html,body{overflow:hidden;background:#eaf0f3}
+body{position:relative;isolation:isolate}
+#miniMap{position:absolute;inset:0}
+.maplibregl-map{background:#e8eef2}
+.maplibregl-canvas{outline:none}
+.maplibregl-control-container{display:none!important}
+.mini-marker{display:grid;place-items:center;min-width:28px;height:28px;padding:0 7px;border:3px solid #fff;border-radius:999px;background:#0a2f57;color:#fff;box-shadow:0 5px 16px rgba(10,47,87,.22);font-size:10px;font-weight:900;line-height:1;white-space:nowrap}
+.mini-marker.destination{background:#fff;color:#0a2f57;border-color:#0a2f57}
+.mini-marker.destination:after{content:"";position:absolute;bottom:-7px;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #0a2f57}
+.mini-route-key{position:absolute;z-index:3;left:8px;bottom:8px;display:flex;align-items:center;gap:6px;padding:5px 7px;border:1px solid rgba(16,37,62,.14);border-radius:999px;background:rgba(255,255,255,.9);box-shadow:0 4px 15px rgba(16,37,62,.12);pointer-events:none}
+.mini-route-key i{width:20px;height:4px;border-radius:999px;background:#006fbf;box-shadow:0 0 0 1px rgba(255,255,255,.95)}
+.mini-route-key span{font-size:7px;font-weight:900;letter-spacing:.12em}
+.mini-attrib{position:absolute;z-index:3;right:4px;bottom:3px;padding:2px 4px;border-radius:4px;background:rgba(255,255,255,.75);color:#52636c;font-size:7px;line-height:1;text-decoration:none}
+@media(max-width:420px){.mini-marker{min-width:24px;height:24px;padding:0 5px;border-width:2px;font-size:9px}.mini-route-key{left:5px;bottom:5px}.mini-attrib{font-size:6px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+
+body{background:#dfe7e4!important}.mini-route-key{border:1px solid rgba(23,39,43,.16)!important;border-radius:999px!important;background:rgba(251,250,246,.94)!important;color:#17272b!important;box-shadow:0 6px 16px rgba(23,39,43,.08)!important}.mini-route-key i{background:#315f78!important}.mini-attrib{background:rgba(251,250,246,.82)!important;color:#536266!important;border-radius:6px!important}
+
+
+/* V71 mini-map text and surfaces */
+:root{color:#102d42;background:#e7f5f8}
+html,body{background:#e7f5f8!important;color:#102d42}
+.mini-marker{background:#073c5a!important;color:#ffffff!important}
+.mini-marker.destination{background:#ffffff!important;color:#073c5a!important;border-color:#073c5a!important}
+.mini-marker.destination:after{border-top-color:#073c5a!important}
+.mini-route-key{background:rgba(255,255,255,.98)!important;color:#102d42!important;border-color:#b7cbd3!important}
+.mini-route-key span{font-size:10px!important;color:#102d42!important}
+.mini-route-key i{background:#075ca8!important}
+.mini-attrib{background:#ffffff!important;color:#415b6a!important;opacity:1!important;font-size:9px!important}
+
+.mini-map-fallback { position:absolute; inset:0; display:grid; place-items:center; padding:14px; background:#eef5f7; color:#102d42; }
+.mini-map-fallback-card { width:min(440px,100%); padding:18px; border:1px solid #c4d4dc; border-radius:12px; background:#fff; box-shadow:0 6px 20px rgba(16,45,66,.12); font-size:14px; line-height:1.6; }
+.mini-map-fallback-card a { display:inline-flex; align-items:center; min-height:44px; margin-top:8px; padding:8px 12px; border:2px solid #073c5a; border-radius:8px; color:#073c5a; font-weight:800; text-decoration:underline; }
+
+</style>
+  
+<style data-bundled-from="compact-ui.css">
+/* SAIJO compact controls + vision accessibility refinements (V72) */
+:root {
+  --a11y-ink: #102d42;
+  --a11y-navy: #073c5a;
+  --a11y-paper: #ffffff;
+  --a11y-focus: #ffbf00;
+  --a11y-border: #526b79;
+}
+
+/* Skip links: invisible until keyboard focus, then clearly visible. */
+.saijo-skip-link {
+  position: fixed !important;
+  z-index: 10000 !important;
+  top: 8px !important;
+  left: 8px !important;
+  transform: translateY(calc(-100% - 18px));
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 10px 16px !important;
+  border: 3px solid #ffffff !important;
+  border-radius: 10px !important;
+  background: #073c5a !important;
+  color: #ffffff !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  line-height: 1.35;
+  text-decoration: underline !important;
+  box-shadow: 0 0 0 3px #073c5a !important;
+}
+.saijo-skip-link:focus,
+.saijo-skip-link:focus-visible { transform: none !important; }
+
+/* Strong two-tone focus indicator works against both light and dark surfaces. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid #073c5a !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 6px #ffbf00 !important;
+}
+
+/* Reduce duplicate persistent controls; settings remain available from the menu. */
+body:not(.map-page) .ud-fab { display: none !important; }
+@media (min-width: 768px) {
+  body:not(.map-page) .v64-main-nav .v52-ud-nav { display: none !important; }
+}
+
+/* Make persistent mobile navigation legible without adding more tabs. */
+.v69-mobile-nav {
+  background: #ffffff !important;
+  border-top: 2px solid #526b79 !important;
+  box-shadow: 0 -5px 18px rgba(16, 45, 66, .10) !important;
+}
+.v69-mobile-nav a,
+.v69-mobile-nav button {
+  color: #073c5a !important;
+  min-height: 56px !important;
+  border-radius: 12px !important;
+}
+.v69-mobile-nav .nav-label {
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0 !important;
+  font-weight: 750 !important;
+}
+.v69-mobile-nav a.is-active {
+  background: #d9eef5 !important;
+  color: #052a42 !important;
+  outline: 2px solid #07516e;
+  outline-offset: -2px;
+}
+
+/* Utility panels: solid surfaces and generous targets for low-vision users. */
+.site-menu-panel,
+.ud-dialog,
+.ud-panel,
+.places-panel,
+.route-planner-panel,
+.map-text-panel,
+.v64-accessible-panel {
+  color: #102d42;
+}
+.site-menu .menu-settings {
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+  min-height: 54px !important;
+  margin: 12px 0 18px !important;
+  padding: 12px 16px !important;
+  border: 2px solid #ffffff !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  color: #073c5a !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  text-align: left;
+}
+.site-menu .menu-close,
+.ud-close,
+.close-button,
+.menu-close {
+  min-width: 44px !important;
+  min-height: 44px !important;
+  font-size: 22px !important;
+}
+
+/* Avoid tiny mobile labels and make text links discoverable without relying on color. */
+@media (max-width: 767px) {
+  .v64-breadcrumb { font-size: 14px !important; }
+  .v64-main-nav .v64-menu-toggle { min-width: 48px !important; min-height: 48px !important; }
+  .page-hero .eyebrow,
+  .eyebrow { font-size: 12px !important; }
+  .menu-grid a,
+  .menu-breweries a,
+  .v45-menu-primary a { min-height: 48px; }
+  .menu-grid a { padding: 12px !important; }
+}
+body:not(.map-page) main p a:not(.action),
+body:not(.map-page) main li a:not(.action),
+body:not(.map-page) .global-footer p a {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .16em;
+}
+
+/* Map controls: retain frequent actions; tuck secondary actions into one menu. */
+body.map-page .map-controls {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 7px !important;
+  max-width: min(560px, calc(100vw - 20px));
+}
+body.map-page .map-controls > .control-button {
+  min-width: 0 !important;
+  min-height: 52px !important;
+  padding: 6px 8px !important;
+  border: 2px solid #ffffff !important;
+  outline: 2px solid #17324d !important;
+  border-radius: 12px !important;
+  background-color: #ffffff !important;
+  color: #102d42 !important;
+  box-shadow: 0 4px 14px rgba(8, 35, 55, .20) !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  text-align: center;
+}
+body.map-page .map-controls > #locationButton {
+  background: #073c5a !important;
+  color: #ffffff !important;
+  outline-color: #073c5a !important;
+}
+body.map-page .map-controls > #placesButton {
+  background: #ffffff !important;
+  color: #073c5a !important;
+  outline-color: #073c5a !important;
+}
+body.map-page .map-controls > #routePlannerButton {
+  background: #005ca8 !important;
+  color: #ffffff !important;
+  outline-color: #073c5a !important;
+}
+body.map-page .map-controls .control-icon {
+  font-size: 17px !important;
+  line-height: 1.1 !important;
+}
+body.map-page .map-more-actions {
+  position: relative;
+  min-width: 0;
+}
+body.map-page .map-more-actions > summary {
+  list-style: none;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  width: 100%;
+  min-height: 52px;
+  padding: 6px 8px;
+  border: 2px solid #ffffff;
+  outline: 2px solid #17324d;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #102d42;
+  box-shadow: 0 4px 14px rgba(8,35,55,.20);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+}
+body.map-page .map-more-actions > summary::-webkit-details-marker { display: none; }
+body.map-page .map-more-actions > summary::marker { content: ""; }
+body.map-page .map-more-actions > summary::after {
+  content: "";
+  width: 0; height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
+  margin-top: 2px;
+}
+body.map-page .map-more-actions[open] > summary { background: #d9eef5; }
+body.map-page .map-more-actions-panel {
+  position: absolute;
+  z-index: 100;
+  right: 0;
+  bottom: calc(100% + 10px);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: min(320px, calc(100vw - 20px));
+  max-height: min(62vh, 420px);
+  overflow: auto;
+  padding: 12px;
+  border: 2px solid #17324d;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #102d42;
+  box-shadow: 0 12px 32px rgba(0,0,0,.24);
+}
+body.map-page .map-more-actions-panel .control-button {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 52px !important;
+  padding: 8px !important;
+  border: 2px solid #526b79 !important;
+  outline: none !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  color: #102d42 !important;
+  box-shadow: none !important;
+  font-size: 13px !important;
+  line-height: 1.25 !important;
+}
+body.map-page .map-more-actions-panel .control-button:focus-visible {
+  outline: 3px solid #073c5a !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 5px #ffbf00 !important;
+}
+body.map-page .map-more-actions-panel .control-button .control-icon {
+  font-size: 17px !important;
+}
+@media (min-width: 921px) {
+  body.map-page .map-controls { grid-template-columns: repeat(4, minmax(68px, auto)); }
+}
+@media (max-width: 640px) {
+  body.map-page .map-controls {
+    left: 9px !important;
+    right: 9px !important;
+    bottom: calc(max(10px, env(safe-area-inset-bottom)) + 8px) !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    max-width: none;
+  }
+  body.map-page .map-controls > .control-button,
+  body.map-page .map-more-actions > summary { min-height: 50px !important; padding: 5px 3px !important; font-size: 11px !important; }
+  body.map-page .map-more-actions-panel { right: 0; width: min(300px, calc(100vw - 18px)); gap: 7px; padding: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
+
+
+/* V73: keep primary destinations visible; simplify only secondary controls. */
+:where(button, a, input, select, textarea, summary, [role="button"]):focus-visible {
+  outline: 3px solid #073c5a !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 6px #ffbf00 !important;
+}
+
+/* Settings are available from the menu; avoid a second floating button. */
+body:not(.map-page) .ud-fab { display: none !important; }
+
+/* Keep page content clear of persistent mobile navigation. */
+@media (max-width: 767px) {
+  body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .v69-mobile-nav { padding-bottom: calc(7px + env(safe-area-inset-bottom)); }
+  .v69-mobile-nav .nav-label { font-size: 12px !important; line-height: 1.25 !important; }
+}
+
+/* Strong non-color cue for active navigation and text links. */
+.v69-mobile-nav a.is-active .nav-label { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.v64-main-nav a[aria-current="page"] { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+
+@media (forced-colors: active) {
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible { outline: 3px solid Highlight !important; box-shadow: none !important; }
+  .v69-mobile-nav, .map-more-actions-panel, .map-more-actions > summary { border: 1px solid CanvasText !important; }
+  .v69-mobile-nav a.is-active { outline: 2px solid Highlight !important; }
+}
+
+
+/* V73: map controls sit above the mobile navigation, never underneath it. */
+@media (max-width: 767px) {
+  body.map-page .map-controls {
+    bottom: calc(82px + env(safe-area-inset-bottom)) !important;
+    top: auto !important;
+  }
+  body.map-page .places-panel {
+    bottom: calc(76px + env(safe-area-inset-bottom)) !important;
+    max-height: calc(76dvh - 12px) !important;
+  }
+  /* A top-of-page control is redundant on the full-screen map; mobile nav remains. */
+  body.map-page .v64-back-top.is-map { display: none !important; }
+}
+
+</style>
+
+
+<link rel="stylesheet" href="./compact-ui.css?v=76">
+<link rel="stylesheet" href="./corporate-simple.css?v=76">
+</head>
+<body>
+<main id="miniMap" aria-label="西条駅から目的地までの小さなルートマップ"></main>
+<div class="mini-route-key" aria-hidden="true"><i></i><span>ROUTE</span></div>
+<a class="mini-attrib" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a>
+<script id="github-pages-v70-js">
+
+
+/* ===== GitHub Pages V70 bundled JS ===== */
+"use strict";
+(() => {
+  const miniRoot = document.getElementById("miniMap");
+  const showMiniFallback = (message) => {
+    if (!miniRoot) return;
+    miniRoot.innerHTML = `<div class="mini-map-fallback"><div class="mini-map-fallback-card"><strong>地図を表示できません</strong><p>${message || "地図データを読み込めませんでした。"}</p><a href="./map.html">地図を開く</a></div></div>`;
+  };
+  if (!window.maplibregl || typeof window.maplibregl.Map !== "function") {
+    showMiniFallback("地図ライブラリの読み込みに失敗しました。メインの地図ページをご利用ください。");
+    return;
+  }
+  const STYLE = "https://tiles.openfreemap.org/styles/liberty";
+  const NODES = {
+    "saijo-station":[132.743606,34.431097], stationSouth:[132.743780,34.430730], centralWest:[132.744450,34.430520],
+    westA:[132.743050,34.430650], westB:[132.742180,34.430210], westC:[132.741350,34.429820], sanyotsuru:[132.740825,34.429666],
+    southA:[132.744520,34.429850], hakubotan:[132.745133,34.429412], kamotsuru:[132.745402,34.430414], saijotsuru:[132.745620,34.430238],
+    kirei:[132.746323,34.430119], gateWest:[132.746420,34.429850], kugurimon:[132.746796,34.429599], northEast:[132.746350,34.430610],
+    fukubijin:[132.747731,34.430674], eastMid:[132.748150,34.430050], eastSouth:[132.747650,34.429360], kamoizumi:[132.748630,34.429061],
+    "tourist-info-station":[132.743735,34.431120], "sakagura-info":[132.746735,34.429655], "kugurimon-toilet":[132.746875,34.429555],
+    "kugurimon-coffee":[132.746650,34.429565], "historical-square":[132.745350,34.429455], boulevardNorth:[132.743650,34.430050],
+    boulevardMid:[132.743300,34.428650], kurara:[132.7424747,34.4283545], "city-museum":[132.7423088,34.4271133], museumEast:[132.743300,34.427120],
+    cityCenterEast:[132.746050,34.427120], yumeWest:[132.748650,34.427000], "yume-town":[132.7500214,34.4269265]
+  };
+  const EDGES = [
+    ["saijo-station","stationSouth"],["stationSouth","centralWest"],["stationSouth","westA"],["westA","westB"],["westB","westC"],["westC","sanyotsuru"],
+    ["centralWest","kamotsuru"],["centralWest","southA"],["southA","hakubotan"],["kamotsuru","saijotsuru"],["saijotsuru","kirei"],["kirei","gateWest"],
+    ["gateWest","kugurimon"],["hakubotan","kugurimon"],["kamotsuru","northEast"],["northEast","fukubijin"],["fukubijin","eastMid"],["eastMid","kamoizumi"],
+    ["kugurimon","eastSouth"],["eastSouth","kamoizumi"],["saijo-station","tourist-info-station"],["kugurimon","sakagura-info"],["kugurimon","kugurimon-toilet"],
+    ["kugurimon","kugurimon-coffee"],["hakubotan","historical-square"],["stationSouth","boulevardNorth"],["boulevardNorth","boulevardMid"],["boulevardMid","kurara"],
+    ["kurara","city-museum"],["city-museum","museumEast"],["museumEast","cityCenterEast"],["cityCenterEast","yumeWest"],["yumeWest","yume-town"]
+  ];
+  const LABELS = {"saijo-station":"JR",sanyotsuru:"1",hakubotan:"2",saijotsuru:"3",kamotsuru:"4",kirei:"5",fukubijin:"6",kamoizumi:"7",kugurimon:"門",kurara:"文","city-museum":"美","yume-town":"買","sakagura-info":"案"};
+
+  function metres(a,b){
+    const R=6371000, r=Math.PI/180, dLat=(b[1]-a[1])*r, dLng=(b[0]-a[0])*r;
+    const q=Math.sin(dLat/2)**2+Math.cos(a[1]*r)*Math.cos(b[1]*r)*Math.sin(dLng/2)**2;
+    return 2*R*Math.atan2(Math.sqrt(q),Math.sqrt(1-q));
+  }
+  function shortest(start,end){
+    if(!NODES[start]||!NODES[end]) return null;
+    const graph={}; Object.keys(NODES).forEach(k=>graph[k]=[]);
+    EDGES.forEach(([a,b])=>{const w=metres(NODES[a],NODES[b]);graph[a].push([b,w]);graph[b].push([a,w])});
+    const dist={},prev={},todo=new Set(Object.keys(NODES)); Object.keys(NODES).forEach(k=>dist[k]=Infinity);dist[start]=0;
+    while(todo.size){let u=null,best=Infinity;for(const k of todo){if(dist[k]<best){best=dist[k];u=k}}if(u===null)break;todo.delete(u);if(u===end)break;
+      for(const [v,w] of graph[u]){if(!todo.has(v))continue;const alt=dist[u]+w;if(alt<dist[v]){dist[v]=alt;prev[v]=u}}}
+    if(!Number.isFinite(dist[end])) return null;
+    const ids=[];for(let u=end;u;u=prev[u]){ids.push(u);if(u===start)break}ids.reverse();
+    return ids.map(id=>NODES[id]);
+  }
+  function marker(label,kind){const el=document.createElement("div");el.className=`mini-marker ${kind||""}`;el.textContent=label;return el}
+  function boundsOf(coords){const b=new maplibregl.LngLatBounds();coords.forEach(c=>b.extend(c));return b}
+  function waitForSize(map){
+    let count=0; const tick=()=>{map.resize(); if(++count<8) requestAnimationFrame(tick)}; requestAnimationFrame(tick);
+    if("ResizeObserver" in window){new ResizeObserver(()=>map.resize()).observe(document.body)}
+  }
+
+  const params=new URLSearchParams(location.search);
+  const from=params.get("from")||"saijo-station";
+  const to=params.get("to")||params.get("place")||"kamotsuru";
+  const route=params.get("from")||params.get("to") ? shortest(from,to) : null;
+  const focus=NODES[to]||NODES["kamotsuru"];
+  const map=new maplibregl.Map({container:"miniMap",style:STYLE,center:focus,zoom:16.8,pitch:0,bearing:0,interactive:false,attributionControl:false,fadeDuration:0});
+  waitForSize(map);
+  let miniMapLoaded = false;
+  map.on("load",()=>{
+    miniMapLoaded = true;
+    if(route&&route.length>1){
+      map.addSource("mini-route",{type:"geojson",data:{type:"Feature",properties:{},geometry:{type:"LineString",coordinates:route}}});
+      map.addLayer({id:"mini-route-casing",type:"line",source:"mini-route",paint:{"line-color":"#ffffff","line-width":9,"line-opacity":.96}});
+      map.addLayer({id:"mini-route-line",type:"line",source:"mini-route",paint:{"line-color":"#006fbf","line-width":5.5,"line-opacity":1}});
+      new maplibregl.Marker({element:marker(LABELS[from]||"START")}).setLngLat(NODES[from]).addTo(map);
+      new maplibregl.Marker({element:marker(LABELS[to]||"●","destination")}).setLngLat(NODES[to]).addTo(map);
+      map.fitBounds(boundsOf(route),{padding:{top:34,right:38,bottom:34,left:38},duration:0,maxZoom:17.7});
+    }else{
+      new maplibregl.Marker({element:marker(LABELS[to]||"●","destination")}).setLngLat(focus).addTo(map);
+      map.jumpTo({center:focus,zoom:17.1});
+    }
+    map.resize();
+  });
+  map.on("styledata",()=>map.resize());
+  map.on("error", (event) => { console.warn("Mini map error:", event?.error || event); });
+  window.setTimeout(() => {
+    if (!miniMapLoaded && miniRoot && !miniRoot.querySelector(".mini-map-fallback")) {
+      showMiniFallback("地図データの読み込みに時間がかかっています。通信環境を確認してください。");
+    }
+  }, 15000);
+})();
+
+
+(() => {
+  'use strict';
+
+  const ROOT = 'audio/ui/';
+  const SOURCES = {
+    open: ROOT + 'site-open.mp3',
+    tap: ROOT + 'tap.mp3',
+    page: ROOT + 'page-transition.mp3'
+  };
+
+  const makeAudio = (src, volume) => {
+    const audio = new Audio(src);
+    audio.preload = 'auto';
+    audio.volume = volume;
+    return audio;
+  };
+
+  const sounds = {
+    open: makeAudio(SOURCES.open, 0.58),
+    tap: makeAudio(SOURCES.tap, 0.46),
+    page: makeAudio(SOURCES.page, 0.56)
+  };
+
+  let openingPending = document.body?.dataset.page === 'home';
+  let suppressNextClickSound = false;
+  let navigating = false;
+
+  const replay = (audio) => {
+    try {
+      audio.pause();
+      audio.currentTime = 0;
+      const result = audio.play();
+      if (result && typeof result.catch === 'function') result.catch(() => {});
+    } catch (_) {}
+  };
+
+  const tryOpeningSound = () => {
+    if (!openingPending) return;
+    openingPending = false;
+    try {
+      sounds.open.currentTime = 0;
+      const p = sounds.open.play();
+      if (p && typeof p.catch === 'function') {
+        p.catch(() => { openingPending = true; });
+      }
+    } catch (_) {
+      openingPending = true;
+    }
+  };
+
+  // Browsers often block autoplay. Try once on load, then replay on the
+  // first real user interaction if it was blocked.
+  if (document.body?.dataset.page === 'home') {
+    window.setTimeout(tryOpeningSound, 120);
+
+    const unlockOpening = () => {
+      if (!openingPending) return;
+      suppressNextClickSound = true;
+      tryOpeningSound();
+    };
+    window.addEventListener('pointerdown', unlockOpening, { capture: true, once: true });
+    window.addEventListener('keydown', unlockOpening, { capture: true, once: true });
+  }
+
+  const isInternalNavigation = (anchor) => {
+    if (!anchor || !anchor.href) return false;
+    if (anchor.hasAttribute('download')) return false;
+    if (anchor.target && anchor.target !== '_self') return false;
+
+    const raw = anchor.getAttribute('href') || '';
+    if (!raw || raw.startsWith('#') || raw.startsWith('javascript:') || raw.startsWith('mailto:') || raw.startsWith('tel:')) return false;
+
+    try {
+      const url = new URL(anchor.href, location.href);
+      if (url.protocol === 'http:' || url.protocol === 'https:') {
+        return url.origin === location.origin;
+      }
+      return url.protocol === location.protocol;
+    } catch (_) {
+      return false;
+    }
+  };
+
+  document.addEventListener('click', (event) => {
+    if (!event.isTrusted) return;
+
+    if (suppressNextClickSound) {
+      suppressNextClickSound = false;
+      return;
+    }
+
+    const anchor = event.target.closest('a[href]');
+    if (anchor) {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+      if (isInternalNavigation(anchor) && !navigating) {
+        event.preventDefault();
+        navigating = true;
+        replay(sounds.page);
+        const href = anchor.href;
+        // The supplied transition sound starts immediately; the longer delay also lets
+        // the seven-strip brewery transition become visually legible.
+        window.setTimeout(() => { location.href = href; }, 540);
+      } else {
+        replay(sounds.tap);
+      }
+      return;
+    }
+
+    const interactive = event.target.closest(
+      'button, [role="button"], input, select, textarea, summary, .place-marker, .maplibregl-marker'
+    );
+    if (interactive && !interactive.disabled && interactive.getAttribute('aria-disabled') !== 'true') {
+      replay(sounds.tap);
+    }
+  }, true);
+
+  // Expose a tiny API for future map/site actions that are triggered from JS.
+  window.SaijoUISounds = Object.freeze({
+    tap: () => replay(sounds.tap),
+    page: () => replay(sounds.page),
+    open: () => replay(sounds.open)
+  });
+})();
+
+</script>
+  
+<script data-bundled-from="compact-ui.js">
+/* SAIJO V72: concise controls and screen-reader/keyboard support. */
+(function () {
+  'use strict';
+
+  function addSkipLink() {
+    const body = document.body;
+    if (!body || body.querySelector('.saijo-skip-link, .v64-skip')) return;
+    const main = document.querySelector('main');
+    if (!main) return;
+    if (!main.id) main.id = 'main-content';
+    if (!main.hasAttribute('tabindex')) main.setAttribute('tabindex', '-1');
+
+    const link = document.createElement('a');
+    link.className = 'saijo-skip-link';
+    link.href = '#' + main.id;
+    link.textContent = '本文へ移動';
+    link.addEventListener('click', function () {
+      window.setTimeout(function () {
+        main.focus({ preventScroll: true });
+      }, 0);
+    });
+    body.insertBefore(link, body.firstChild);
+  }
+
+  function groupMapActions() {
+    if (!document.body.classList.contains('map-page')) return;
+    const controls = document.getElementById('mainControls');
+    if (!controls || controls.dataset.compactControls === 'true') return;
+
+    const byId = (id) => controls.querySelector('#' + id);
+    const current = byId('locationButton');
+    const places = byId('placesButton');
+    const route = byId('routePlannerButton');
+    const overview = byId('overviewButton');
+    const station = byId('stationButton');
+    const ud = byId('udButton');
+    if (![current, places, route, overview, station, ud].every(Boolean)) return;
+
+    const more = document.createElement('details');
+    more.className = 'map-more-actions';
+    more.innerHTML = '<summary aria-label="その他の地図操作"><span class="control-icon" aria-hidden="true">＋</span><span>その他</span></summary><div class="map-more-actions-panel" role="group" aria-label="その他の地図操作"></div>';
+    const panel = more.querySelector('.map-more-actions-panel');
+
+    panel.append(overview, station, ud);
+    controls.replaceChildren(current, places, route, more);
+    controls.dataset.compactControls = 'true';
+
+    const summary = more.querySelector('summary');
+    const syncExpanded = () => summary.setAttribute('aria-expanded', String(more.open));
+    more.addEventListener('toggle', syncExpanded);
+    syncExpanded();
+
+    // Close the popover after an action or an outside click.
+    panel.addEventListener('click', function (event) {
+      if (event.target.closest('button')) {
+        more.open = false;
+        syncExpanded();
+      }
+    });
+    document.addEventListener('click', function (event) {
+      if (more.open && !more.contains(event.target)) { more.open = false; syncExpanded(); }
+    });
+    more.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && more.open) {
+        event.preventDefault();
+        more.open = false;
+        syncExpanded();
+        more.querySelector('summary').focus();
+      }
+    });
+  }
+
+  function enhanceControls() {
+    addSkipLink();
+    groupMapActions();
+
+    // Put the settings action near the top of the menu so it is easy to discover.
+    const siteMenu = document.getElementById('siteMenu');
+    const menuTop = siteMenu && siteMenu.querySelector('.site-menu-top');
+    const settingsButton = siteMenu && siteMenu.querySelector('.menu-settings');
+    if (menuTop && settingsButton && menuTop.nextElementSibling !== settingsButton) {
+      menuTop.insertAdjacentElement('afterend', settingsButton);
+    }
+
+    // Name map controls explicitly, even if a compact visual state hides a text label.
+    document.querySelectorAll('.map-controls button').forEach(function (button) {
+      if (!button.hasAttribute('aria-label')) {
+        const visibleName = button.textContent.replace(/\s+/g, ' ').trim();
+        if (visibleName) button.setAttribute('aria-label', visibleName);
+      }
+    });
+
+    // Ensure decorative icons don't create duplicate names for assistive technology.
+    document.querySelectorAll('.v69-mobile-nav svg, .v64-menu-icon, .control-icon').forEach(function (icon) {
+      if (!icon.hasAttribute('aria-hidden')) icon.setAttribute('aria-hidden', 'true');
+    });
+
+    // Keep modal-style navigation menus clearly named and accurately expanded.
+    document.querySelectorAll('[data-menu-open]').forEach(function (button) {
+      if (!button.hasAttribute('aria-label')) button.setAttribute('aria-label', 'メニューを開く');
+      button.addEventListener('click', function () {
+        const expanded = button.getAttribute('aria-expanded') === 'true';
+        button.setAttribute('aria-label', expanded ? 'メニューを開く' : 'メニューを閉じる');
+      });
+    });
+
+    // A control must remain visible and usable when the user asks for larger text.
+    document.querySelectorAll('button, [role="button"], input, select, textarea').forEach(function (control) {
+      if (!control.style.minHeight) control.style.minHeight = '44px';
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', enhanceControls, { once: true });
+  } else {
+    enhanceControls();
+  }
+})();
+
+</script>
+
+</body>
+</html>

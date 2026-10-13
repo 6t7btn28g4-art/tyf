@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="西条酒蔵めぐり">
+  <circle cx="60" cy="60" r="56" fill="#fffdf8" stroke="#0b2f57" stroke-width="4"/>
+  <path d="M60 18c10 12 19 16 31 18-4 10-4 20 0 30-12 2-21 7-31 18-10-11-19-16-31-18 4-10 4-20 0-30 12-2 21-6 31-18Z" fill="#0b2f57"/>
+  <circle cx="60" cy="51" r="15" fill="#fffdf8"/>
+  <path d="M41 76c8-11 30-11 38 0" fill="none" stroke="#fffdf8" stroke-width="7" stroke-linecap="round"/>
+  <path d="M47 38h26M53 31h14" stroke="#fffdf8" stroke-width="5" stroke-linecap="round"/>
+</svg>
